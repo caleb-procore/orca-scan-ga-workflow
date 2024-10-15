@@ -67,7 +67,6 @@ jobs:
             ENV="prod"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             APP_NAME=${{ env.APP_NAME_PROD }}
-            APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_PROD }}
           elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
@@ -207,9 +206,9 @@ jobs:
       - name: Build Docker Image on simulated merge
         if: github.event_name == 'pull_request'
         run: |
-          echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}"
+          #echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}"
           echo "APP_NAME | ${{ env.APP_NAME }}"
-          echo "APP_NAME | $APP_NAME"
+          #echo "APP_NAME | $APP_NAME"
           echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
           echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
