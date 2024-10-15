@@ -67,6 +67,7 @@ jobs:
             ENV="prod"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             APP_NAME=${{ env.APP_NAME_PROD }}
+            APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_PROD }}
           elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
@@ -103,14 +104,14 @@ jobs:
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
     outputs:
-      ENV: ${{ steps.set_outputs.outputs.ENV }}
-      APP_NAME: ${{ steps.set_outputs.outputs.app_name }}
-      OIDC_ROLE_ARN: ${{ steps.set_outputs.outputs.OIDC_ROLE_ARN }}
-      SERVICE_NAME: ${{ steps.set_outputs.outputs.SERVICE_NAME }}
-      ACTION_TYPE: ${{ steps.set_outputs.outputs.ACTION_TYPE }}
-      AWS_ACCOUNT_ID: ${{ steps.set_outputs.outputs.AWS_ACCOUNT_ID }}
-      APP_DIRECTORY: ${{ steps.set_outputs.outputs.app_directory}}
-      DOCKERFILE_PATH: ${{ steps.set_outputs.outputs.dockerfile_path }}
+      ENV: ${{ steps.setup.outputs.ENV }}
+      APP_NAME: ${{ steps.setup.outputs.app_name }}
+      OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
+      SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
+      ACTION_TYPE: ${{ steps.setup.outputs.ACTION_TYPE }}
+      AWS_ACCOUNT_ID: ${{ steps.setup.outputs.AWS_ACCOUNT_ID }}
+      APP_DIRECTORY: ${{ steps.setup.outputs.app_directory}}
+      DOCKERFILE_PATH: ${{ steps.setup.outputs.dockerfile_path }}
   
   getparams:
     needs: [ setup ]
