@@ -57,6 +57,8 @@ jobs:
       SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
       ACTION_TYPE: ${{ steps.setup.outputs.ACTION_TYPE }}
       AWS_ACCOUNT_ID: ${{ steps.setup.outputs.AWS_ACCOUNT_ID }}
+      APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
+      DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
     steps:
       - uses: actions/checkout@v3
       - name: Set deployment environment based on Git branch
@@ -100,6 +102,8 @@ jobs:
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+          echo "APP_DIRECTORY=${{ env.APP_DIRECTORY }}" >> "$GITHUB_OUTPUT"
+          echo "DOCKERFILE_PATH=${{ env.DOCKERFILE_PATH }}" >> "$GITHUB_OUTPUT"
 
   getparams:
     needs: [ setup ]
@@ -164,22 +168,20 @@ jobs:
           echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" >> "$GITHUB_OUTPUT"
           echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" >> "$GITHUB_OUTPUT"
 
-  # on PR, and push to main, staging, develop branches build and scan the Docker image
   build-scan:
     needs: [ getparams ]
     name: Build and Scan Docker Image
     uses: ./.github/workflows/build-image-scan.yml
     with:
       aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
-      app-directory: ${{ env.APP_DIRECTORY }}
-      dockerfile-path: ${{ env.DOCKERFILE_PATH }}
+      app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
+      dockerfile-path: ${{ needs.setup.outputs.DOCKERFILE_PATH }}
       oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
       app-name: ${{ needs.setup.outputs.APP_NAME }}
       service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
       env: ${{ needs.setup.outputs.ENV }}
       action-type: ${{ needs.setup.outputs.ACTION_TYPE }}
 
-  # on merge/push to main, staging, develop branches push the image to ECR
   deploy-ecs-api-container:
     if: |
       github.event_name == 'push' &&
@@ -196,8 +198,7 @@ jobs:
       ecs-service-name: ${{ needs.getparams.outputs.ECS_SERVICE_NAME }}
       ecs-task-definition-name: ${{ needs.getparams.outputs.ECS_TASK_DEFINITION_NAME }}
       ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
-      app-directory: ${{ env.APP_DIRECTORY }}
-      dockerfile-path: ${{ env.DOCKERFILE_PATH }}
+      app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
+      dockerfile-path: ${{ needs.setup.outputs.DOCKERFILE_PATH }}
       ecr-image-tag-param: ${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}
     secrets: inherit
-
