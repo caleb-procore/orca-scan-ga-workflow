@@ -62,6 +62,8 @@ jobs:
     outputs:
       ENV: ${{ steps.set_environment.outputs.ENV }}
       OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
+      echo "APP_NAME ${{ env.outputs.APP_NAME }}"
+      echo "APP_NAME ${{ steps.set_environment.outputs.APP_NAME }}"
       APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
       SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
       ACTION_TYPE: ${{ steps.set_environment.outputs.ACTION_TYPE }}
@@ -76,7 +78,8 @@ jobs:
             ENV="prod"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             echo "saw you: APP_NAME=${{ env.APP_NAME_PROD }}"
-            APP_NAME=${{ env.APP_NAME_PROD }}
+            echo "APP_NAME=${{ env.APP_NAME_PROD }}
+            echo "APP_NAME ${{ steps.set_environment.outputs.APP_NAME }}"
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_PROD }}
           elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
@@ -105,6 +108,7 @@ jobs:
             ACTION_TYPE="build_scan_deploy"
           fi
 
+          echo "APP_NAME=$APP_NAME" >> "$APP_NAME"
           echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
           echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
           echo "APP_NAME=APP_NAME" >> "$GITHUB_OUTPUT"
@@ -128,6 +132,8 @@ jobs:
         id: ssm
         env:
           APP_NAME: ${{ needs.setup.outputs.APP_NAME }}
+          echo "APP_NAME: ${{ needs.setup.outputs.APP_NAME }}"
+          echo "APP_NAME: ${{ env.APP_NAME }}"
           ENV: ${{ needs.setup.outputs.ENV }}
           SERVICE_NAME: ${{ needs.setup.outputs.SERVICE_NAME }}
         run: |
@@ -207,7 +213,9 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
-          echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}"
+          echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}"
+          echo "APP_NAME | ${{ env.APP_NAME }}"
+          echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
           echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
           docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
