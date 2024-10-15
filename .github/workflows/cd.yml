@@ -30,6 +30,11 @@ on:
       - staging
       - develop
 
+permissions:
+  id-token: write # need this for OIDC
+  contents: read # need this for actions/checkout
+  packages: write
+
 env:
   OIDC_ROLE_ARN_DEV: arn:aws:iam::785368447960:role/github-actions-oidc-role
   OIDC_ROLE_ARN_STG: arn:aws:iam::785368447960:role/github-actions-oidc-role
@@ -109,10 +114,6 @@ jobs:
     needs: [ setup ]
     name: Get SSM Parameters
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write # need this for OIDC
-      contents: read # need this for actions/checkout
-      packages: write
     outputs:
       ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
       ECS_CLUSTER_NAME: ${{ steps.ssm.outputs.ECS_CLUSTER_NAME }}
@@ -172,10 +173,6 @@ jobs:
     needs: [ getparams ]
     name: Build and Scan Docker Image
     uses: ./.github/workflows/build-image-scan.yml
-    permissions:
-      id-token: write # need this for OIDC
-      contents: read
-      packages: write
     with:
       aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
       app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
