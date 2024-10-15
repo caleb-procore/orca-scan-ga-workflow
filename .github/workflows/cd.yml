@@ -104,7 +104,6 @@ jobs:
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
     outputs:
       ENV: ${{ steps.setup.outputs.ENV }}
-      # APP_NAME: ${{ env.APP_NAME }}
       APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
       OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
       SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
@@ -216,12 +215,20 @@ jobs:
           echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
           # echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
-          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+          # docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }} 
+          echo "ECR_REPO_NAME | $ECR_REPO_NAME"
+          echo "IMG_TAG | $IMG_TAG"
+          docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }}
 
       - name: Build Docker Image on merge to env branch (main, staging, develop)
         if: github.event_name == 'push'
         run: |
-          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+          echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
+          echo "ECR_REPO_NAME | $ECR_REPO_NAME"
+          echo "IMG_TAG | $IMG_TAG"
+          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+          docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }}
 
       - name: Install Orca CLI
         run: |
@@ -261,5 +268,6 @@ jobs:
       ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
       app-directory: ${{ needs.getparams.outputs.APP_DIRECTORY }}
       dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
+      ecr-image-tag-param: "${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}"
       # app-directory: ${{ env.APP_DIRECTORY }}
       # dockerfile-path: ${{ env.DOCKERFILE_PATH }}
