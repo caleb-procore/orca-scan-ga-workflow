@@ -51,7 +51,7 @@ jobs:
 
       - name: Run unit tests
         run: dotnet test --configuration Release --no-build --verbosity normal
-        working-directory: tests/gademo
+        working-directory: tests/gademo.Tests
       
       #      - name: Publish test results
       #        if: always()
