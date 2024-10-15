@@ -105,13 +105,13 @@ jobs:
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
     outputs:
       ENV: ${{ steps.setup.outputs.ENV }}
-      APP_NAME: ${{ steps.setup.outputs.app_name }}
+      APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
       OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
       SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
       ACTION_TYPE: ${{ steps.setup.outputs.ACTION_TYPE }}
       AWS_ACCOUNT_ID: ${{ steps.setup.outputs.AWS_ACCOUNT_ID }}
-      APP_DIRECTORY: ${{ steps.setup.outputs.app_directory}}
-      DOCKERFILE_PATH: ${{ steps.setup.outputs.dockerfile_path }}
+      APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
+      DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
   
   getparams:
     needs: [ setup ]
