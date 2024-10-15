@@ -30,11 +30,6 @@ on:
       - staging
       - develop
 
-permissions:
-  id-token: write # need this for OIDC
-  contents: read # need this for actions/checkout
-  packages: write
-
 env:
   OIDC_ROLE_ARN_DEV: arn:aws:iam::785368447960:role/github-actions-oidc-role
   OIDC_ROLE_ARN_STG: arn:aws:iam::785368447960:role/github-actions-oidc-role
@@ -114,6 +109,10 @@ jobs:
     needs: [ setup ]
     name: Get SSM Parameters
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read # need this for actions/checkout
+      packages: write
     outputs:
       ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
       ECS_CLUSTER_NAME: ${{ steps.ssm.outputs.ECS_CLUSTER_NAME }}
@@ -172,16 +171,23 @@ jobs:
   build-scan:
     needs: [ getparams ]
     name: Build and Scan Docker Image
-    uses: ./.github/workflows/build-image-scan.yml
-    with:
-      aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
-      app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
-      dockerfile-path: ${{ needs.setup.outputs.DOCKERFILE_PATH }}
-      oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-      app-name: ${{ needs.setup.outputs.APP_NAME }}
-      service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
-      env: ${{ needs.setup.outputs.ENV }}
-      action-type: ${{ needs.setup.outputs.ACTION_TYPE }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ needs.setup.outputs.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
+
+      - name: Orca Image Scan
+        uses: orca-security/orca-image-scan-action@v1
+        with:
+          image: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com/${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}
 
   deploy-ecs-api-container:
     if: |

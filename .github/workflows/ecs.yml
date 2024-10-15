@@ -18,11 +18,6 @@ on:
         type: string
         default: "."
         description: Used to specify the path to the application directory.
-      dockerfile-path:
-        required: false
-        type: string
-        default: "./Dockerfile"
-        description: Used to specify the path to the Dockerfile.
       oidc-role-arn:
         required: true
         type: string
@@ -69,11 +64,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -82,37 +72,15 @@ jobs:
           aws-region: ${{ inputs.region }}
 
       - name: Login to Amazon ECR
+        # if: ${{ needs.setup.outputs.ACTION_TYPE == 'build_scan_deploy' }}
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
         with:
           mask-password: true
 
-      - name: Docker build
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPO: ${{ inputs.ecr-repo-name }}
-          IMAGE_TAG: ${{ github.sha }}
-          DOCKER_BUILDKIT: 1
-        run: |
-          echo "ECR Registry: $ECR_REGISTRY"
-          echo "ECR Repository: $ECR_REPO"
-          echo "Image Tag: $IMAGE_TAG"
-          cd ${{ inputs.app-directory }}
-          docker build . -t $ECR_REPO:$IMAGE_TAG -f ${{ inputs.dockerfile-path }}
-
-      - name: Install Orca CLI
-        run: |
-          curl -L https://download.orcasecurity.io/orca-cli-linux -o /usr/local/bin/orca
-          chmod +x /usr/local/bin/orca
-
-      - name: Orca Image Scan
-        run: |
-          orca scan --image $ECR_REPO:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
-
-      # Conditional: Tag and push image to Amazon ECR on orca scan success 
       - name: Docker tag and push image to Amazon ECR
         id: tag-and-push-image
+        # if: ${{ inputs.should_deploy == 'true' && success() && needs.setup.outputs.ACTION_TYPE == 'build_scan_deploy' }}
         if: ${{ inputs.should_deploy == 'true' && success() }}
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -122,8 +90,15 @@ jobs:
           docker tag $ECR_REPO:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          # aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com
+          # docker tag ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com/${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}
+          # docker push ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com/${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}
 
-      # Conditional: only on orca scan success 
+      - name: Print Docker Image and ECR Details
+        run: |
+          echo "Docker Image: ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}"
+          echo "ECR Repository: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com/${{ needs.setup.outputs.APP_NAME }}"
+
       - name: Download task definition
         if: ${{ inputs.should_deploy == 'true' && success() }}
         id: download-task-def
@@ -134,7 +109,6 @@ jobs:
             --task-definition $TASK_DEFINITION_NAME \
             --query taskDefinition > task-definition.json
 
-      # Conditional: only on orca scan success
       - name: Fill in the new image ID in the SSM parameter
         if: ${{ inputs.should_deploy == 'true' && success() }}
         env:
@@ -146,7 +120,6 @@ jobs:
             --value $IMAGE_TAG \
             --overwrite
 
-      # Conditional: only on orca scan success
       - name: Fill in the new image ID in the Amazon ECS task definition
         if: ${{ inputs.should_deploy == 'true' && success() }}
         id: task-def
@@ -156,7 +129,6 @@ jobs:
           container-name: ${{ inputs.ecs-container-name }}
           image: ${{ steps.tag-and-push-image.outputs.image }}
 
-      # Conditional: only on orca scan success
       - name: Deploy Amazon ECS task definition
         if: ${{ inputs.should_deploy == 'true' && success() }}
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
