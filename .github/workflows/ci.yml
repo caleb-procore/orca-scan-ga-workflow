@@ -37,13 +37,13 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build the project
-        run: dotnet build --configuration Release --no-restore
-        with:
-          # This is the path to the solution file that is used for building and running unit tests.
-          dotnet-path: orca-scan-ga-workflow
-          # This is the path to the project that will run locally in order to perform load testing.
-          dotnet-run-project: orca-scan-ga-workflow/ga-workflow-demo
+#      - name: Build the project
+#        run: dotnet build --configuration Release --no-restore
+#        with:
+#          # This is the path to the solution file that is used for building and running unit tests.
+#          dotnet-path: orca-scan-ga-workflow
+#          # This is the path to the project that will run locally in order to perform load testing.
+#          dotnet-run-project: orca-scan-ga-workflow/ga-workflow-demo
 
       - name: Run unit tests
         run: dotnet test --configuration Release --no-build --verbosity normal
