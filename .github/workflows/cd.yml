@@ -211,6 +211,7 @@ jobs:
           echo "APP_NAME | ${{ needs.setup.outputs.app_name }}"
           echo "APP_NAME | ${{ env.APP_NAME }}"
           echo "APP_NAME | $APP_NAME"
+          echo "APP_NAME | ${{ needs.getparams.outputs.APP_NAME}}"
           echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
           echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
           # echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
@@ -259,5 +260,6 @@ jobs:
       ecs-task-definition-name: ${{ needs.getparams.outputs.ECS_TASK_DEFINITION_NAME }}
       ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
       app-directory: ${{ needs.getparams.outputs.APP_DIRECTORY }}
+      dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
       # app-directory: ${{ env.APP_DIRECTORY }}
-      dockerfile-path: ${{ env.DOCKERFILE_PATH }}
+      # dockerfile-path: ${{ env.DOCKERFILE_PATH }}
