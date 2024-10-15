@@ -217,11 +217,14 @@ jobs:
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
           # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
           # docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }} 
-          echo "ECR_REPO_NAME | $ECR_REPO_NAME"
-          echo "IMG_TAG | $IMG_TAG"
-          echo "ECR_REPO_NAME | ${{ steps.ssm.outputs.ECR_REPO_NAME }}"
-          echo "IMG_TAG | ${{ steps.ssm.outputs.IMG_TAG}}"
-          docker build -t $ECR_REPO_NAME ${{ steps.ssm.outputs.ECR_REPO_NAME }}:${{ steps.ssm.outputs.IMG_TAG}} -f ${{ env.DOCKERFILE_PATH }}
+          # echo "ECR_REPO_NAME | $ECR_REPO_NAME"
+          # echo "IMG_TAG | $IMG_TAG"
+          # echo "ECR_REPO_NAME | ${{ steps.ssm.outputs.ECR_REPO_NAME }}"
+          # echo "IMG_TAG | ${{ steps.ssm.outputs.IMG_TAG}}"
+          # docker build -t ${{ steps.ssm.outputs.ECR_REPO_NAME }}:${{ steps.ssm.outputs.IMG_TAG}} -f ${{ env.DOCKERFILE_PATH }}
+          echo "ECR_REPO_NAME | ${{ needs.getparams.outputs.ECR_REPO_NAME }}"
+          echo "ECR_IMAGE_TAG_PARAM | ${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}"
+          docker build -t ${{ needs.getparams.outputs.ECR_REPO_NAME }}:${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM}} -f ${{ env.DOCKERFILE_PATH }}
 
       - name: Build Docker Image on merge to env branch (main, staging, develop)
         if: github.event_name == 'push'
