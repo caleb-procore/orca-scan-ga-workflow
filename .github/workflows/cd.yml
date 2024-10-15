@@ -52,7 +52,7 @@ env:
   SERVICE_NAME_STG: polaris-backend-stg
   SERVICE_NAME_PROD: polaris-backend
   APP_DIRECTORY: src
-  DOCKERFILE_PATH: ./src/gademo/Dockerfile
+  DOCKERFILE_PATH: src/gademo/Dockerfile
   ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
 
 jobs:
@@ -207,6 +207,7 @@ jobs:
         run: |
           pwd
           ls
+          ls -l ${{ needs.setup.outputs.DOCKERFILE_PATH }}
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
           docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ needs.setup.outputs.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
 
