@@ -195,14 +195,23 @@ jobs:
         run: |
           docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ needs.setup.outputs.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
 
-      - name: Orca Image Scan (Simulated Merge & Merge)
-        # if: github.event_name == 'push'
-        # if: github.event_name == 'pull_request'
-        uses: orca-security/orca-image-scan-action@v1
-        with:
-          image: ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}
-        env:
-          ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
+      - name: Install Orca CLI
+        run: |
+          curl -L https://download.orcasecurity.io/orca-cli-linux -o /usr/local/bin/orca
+          chmod +x /usr/local/bin/orca
+
+      - name: Orca Image Scan
+        run: |
+          orca scan --image $ECR_REPO:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
+  
+  #      - name: Orca Image Scan (Simulated Merge & Merge)
+  #        # if: github.event_name == 'push'
+  #        # if: github.event_name == 'pull_request'
+  #        uses: orca-security/orca-image-scan-action@v1
+  #        with:
+  #          image: ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}
+  #        env:
+  #          ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
 
   deploy-ecs-api-container:
     # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
