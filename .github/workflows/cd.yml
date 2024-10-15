@@ -67,6 +67,7 @@ jobs:
             ENV="prod"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             APP_NAME=${{ env.APP_NAME_PROD }}
+            echo "APP_NAME: $APP_NAME"
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_PROD }}
           elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
