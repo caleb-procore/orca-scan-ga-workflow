@@ -132,8 +132,6 @@ jobs:
         id: ssm
         env:
           APP_NAME: ${{ needs.setup.outputs.APP_NAME }}
-          echo "APP_NAME: ${{ needs.setup.outputs.APP_NAME }}"
-          echo "APP_NAME: ${{ env.APP_NAME }}"
           ENV: ${{ needs.setup.outputs.ENV }}
           SERVICE_NAME: ${{ needs.setup.outputs.SERVICE_NAME }}
         run: |
