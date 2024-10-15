@@ -5,7 +5,13 @@ name: Build and Scan Docker Image
 on:
   workflow_call:
     inputs:
+      aws-account-id:
+        required: true
+        type: string
       app-directory:
+        required: true
+        type: string
+      dockerfile-path:
         required: true
         type: string
       oidc-role-arn:
@@ -28,34 +34,33 @@ jobs:
   build-scan:
     name: Build and Scan Docker Image
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Set Docker image tag
-        id: image-tag
-        run: echo "::set-output name=tag::${{ github.sha }}"
-
-      - name: Log Action Type
-        run:
-          echo "Action Type: ${{ inputs['action-type'] }}"
-
-      - name: Assume OIDC Role for AWS
-        if: inputs.action-type == 'build_scan_only' || inputs.action-type == 'build_scan_deploy'
+      - name: Assume OIDC Role
+        id: assume-role
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ inputs.oidc-role-arn }}
           role-session-name: github-action
           aws-region: us-west-2
 
+      - name: Set Docker Build Image Tag
+        id: image-tag
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
       - name: Docker build
         id: build-image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPO: ${{ inputs.ecr-repo-name }}
+          ECR_REGISTRY: ${{ inputs.aws-account-id }}.dkr.ecr.us-west-2.amazonaws.com
+          ECR_REPO: ${{ inputs.app-name }}
           IMAGE_TAG: ${{ github.sha }}
           DOCKER_BUILDKIT: 1
         run: |
@@ -72,10 +77,9 @@ jobs:
           cd ${{ inputs.app-directory }}
           docker build . -t $ECR_REPO:$IMAGE_TAG -f ${{ inputs.dockerfile-path }}
 
-      - name: Scan Docker Image with Orca
+      - name: Orca Image Scan
+        id: scan
         uses: orcasecurity/orca-action@v1
-        env:
-          ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
         with:
-          image: ${{ inputs.app-name }}:${{ steps.image-tag.outputs.tag }}
-          fail-build: true
+          api-key: ${{ secrets.ORCA_API_TOKEN }}
+          image: ${{ inputs.app-name }}:${{ github.sha }}

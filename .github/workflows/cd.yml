@@ -40,6 +40,9 @@ env:
   SERVICE_NAME_DEV: polaris-backend
   SERVICE_NAME_STG: polaris-backend-stg
   SERVICE_NAME_PROD: polaris-backend
+  AWS_ACCOUNT_ID_DEV: 785368447960
+  AWS_ACCOUNT_ID_STG: 785368447960
+  AWS_ACCOUNT_ID_PROD: 723214535755
   APP_DIRECTORY: src
   DOCKERFILE_PATH: ./src/gademo/Dockerfile
 
@@ -53,6 +56,7 @@ jobs:
       APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
       SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
       ACTION_TYPE: ${{ steps.setup.outputs.ACTION_TYPE }}
+      AWS_ACCOUNT_ID: ${{ steps.setup.outputs.AWS_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v3
       - name: Set deployment environment based on Git branch
@@ -63,21 +67,25 @@ jobs:
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             APP_NAME=${{ env.APP_NAME_PROD }}
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
+            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_PROD }}
           elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
             ENV="stg"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
             APP_NAME=${{ env.APP_NAME_STG }}
             SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
+            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_STG }}
           elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
             ENV="dev"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
             APP_NAME=${{ env.APP_NAME_DEV }}
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
+            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_DEV }}
           else
             ENV="dev"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
             APP_NAME=${{ env.APP_NAME_DEV }}
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
+            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_DEV }}
           fi
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -91,12 +99,78 @@ jobs:
           echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
+          echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
 
-  build-scan:
+  getparams:
     needs: [ setup ]
+    name: Get SSM Parameters
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read # need this for actions/checkout
+      packages: write
+    outputs:
+      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
+      ECS_CLUSTER_NAME: ${{ steps.ssm.outputs.ECS_CLUSTER_NAME }}
+      ECS_SERVICE_NAME: ${{ steps.ssm.outputs.ECS_SERVICE_NAME }}
+      ECS_TASK_DEFINITION_NAME: "${{ steps.ssm.outputs.ECS_TASK_DEFINITION_NAME }}"
+      ECS_CONTAINER_NAME: ${{ steps.ssm.outputs.ECS_CONTAINER_NAME }}
+      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup AWS CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+          role-session-name: github-action
+          aws-region: us-west-2
+      - name: Set SSM Parameter Names
+        id: ssm
+        env:
+          APP_NAME: ${{ needs.setup.outputs.APP_NAME }}
+          ENV: ${{ needs.setup.outputs.ENV }}
+          SERVICE_NAME: ${{ needs.setup.outputs.SERVICE_NAME }}
+        run: |
+          aws --version
+          echo APP_NAME=$APP_NAME
+          echo ENV=$ENV
+          echo SERVICE_NAME=$SERVICE_NAME
+
+          ##### Dynamically set the SSM Parameter Names #####
+          ECR_REPO_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-repo-name"
+          ECR_IMAGE_TAG_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-image-tag"
+          ECS_CLUSTER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-cluster-name"
+          ECS_SERVICE_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-service-name"
+          ECS_TASK_DEFINITION_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-task-definition-name"
+          ECS_CONTAINER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-container-name"
+
+          ##### Print Param Names - Validate String Interpolation worked #####
+          echo "ECR_REPO_NAME_PARAM=$ECR_REPO_NAME_PARAM"
+          echo "ECR_IMAGE_TAG_PARAM=$ECR_IMAGE_TAG_PARAM"
+          echo "ECS_CLUSTER_NAME_PARAM=$ECS_CLUSTER_NAME_PARAM"
+          echo "ECS_SERVICE_NAME_PARAM=$ECS_SERVICE_NAME_PARAM"
+          echo "ECS_TASK_DEFINITION_NAME_PARAM=$ECS_TASK_DEFINITION_NAME_PARAM"
+          echo "ECS_CONTAINER_NAME_PARAM=$ECS_CONTAINER_NAME_PARAM"
+
+          ##### Save SSM Parameter Values as GitHub Outputs #####
+          echo "ECR_REPO_NAME=$ECR_REPO_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" >> "$GITHUB_OUTPUT"
+
+  # on PR, and push to main, staging, develop branches build and scan the Docker image
+  build-scan:
+    needs: [ getparams ]
     name: Build and Scan Docker Image
     uses: ./.github/workflows/build-image-scan.yml
     with:
+      aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
       app-directory: ${{ env.APP_DIRECTORY }}
       dockerfile-path: ${{ env.DOCKERFILE_PATH }}
       oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
@@ -105,19 +179,25 @@ jobs:
       env: ${{ needs.setup.outputs.ENV }}
       action-type: ${{ needs.setup.outputs.ACTION_TYPE }}
 
+  # on merge/push to main, staging, develop branches push the image to ECR
   deploy-ecs-api-container:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging')
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/develop' ||
+      github.ref == 'refs/heads/staging')
     needs: [ build-scan ]
     name: Deploy ECS Container
     uses: ./.github/workflows/ecs.yml
     with:
       oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-      ecr-repo-name: ${{ needs.build-scan.outputs.ECR_REPO_NAME }}
-      ecs-cluster-name: ${{ needs.build-scan.outputs.ECS_CLUSTER_NAME }}
-      ecs-service-name: ${{ needs.build-scan.outputs.ECS_SERVICE_NAME }}
-      ecs-task-definition-name: ${{ needs.build-scan.outputs.ECS_TASK_DEFINITION_NAME }}
-      ecs-container-name: ${{ needs.build-scan.outputs.ECS_CONTAINER_NAME }}
+      ecr-repo-name: ${{ needs.getparams.outputs.ECR_REPO_NAME }}
+      ecs-cluster-name: ${{ needs.getparams.outputs.ECS_CLUSTER_NAME }}
+      ecs-service-name: ${{ needs.getparams.outputs.ECS_SERVICE_NAME }}
+      ecs-task-definition-name: ${{ needs.getparams.outputs.ECS_TASK_DEFINITION_NAME }}
+      ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
       app-directory: ${{ env.APP_DIRECTORY }}
       dockerfile-path: ${{ env.DOCKERFILE_PATH }}
-      ecr-image-tag-param: ${{ needs.build-scan.outputs.ECR_IMAGE_TAG_PARAM }}
+      ecr-image-tag-param: ${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}
     secrets: inherit
+
