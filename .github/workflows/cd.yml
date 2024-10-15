@@ -63,7 +63,6 @@ jobs:
       ENV: ${{ steps.set_environment.outputs.ENV }}
       OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
       APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
-      echo "APP_NAME (jobs : setup : output) = $APP_NAME"
       SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
       ACTION_TYPE: ${{ steps.set_environment.outputs.ACTION_TYPE }}
       AWS_ACCOUNT_ID: ${{ steps.set_environment.outputs.AWS_ACCOUNT_ID }}
