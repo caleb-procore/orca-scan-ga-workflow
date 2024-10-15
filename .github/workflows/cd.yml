@@ -75,6 +75,7 @@ jobs:
           if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
             ENV="prod"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
+            echo "saw you: APP_NAME=${{ env.APP_NAME_PROD }}"
             APP_NAME=${{ env.APP_NAME_PROD }}
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_PROD }}
