@@ -105,7 +105,8 @@ jobs:
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
     outputs:
       ENV: ${{ steps.setup.outputs.ENV }}
-      APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
+      APP_NAME: ${{ env.APP_NAME }}
+      # APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
       OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
       SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
       ACTION_TYPE: ${{ steps.setup.outputs.ACTION_TYPE }}
