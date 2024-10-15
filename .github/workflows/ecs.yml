@@ -47,6 +47,10 @@ on:
         type: string
         description: Used to specify the SSM parameter for the ECR image tag.
         # default: "/procore-io-platform/dev/procore-portal-backend/ecr-image-tag"
+      dockerfile-path:
+        required: false
+        type: string
+        description: Specifies the path to Dockerfile 
       region:
         required: false
         type: string
