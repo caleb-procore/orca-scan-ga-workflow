@@ -97,7 +97,7 @@ jobs:
 
           # echo "APP_NAME=$APP_NAME" >> "$APP_NAME"
           echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
-          echo "APP_NAME=APP_NAME" >> "$GITHUB_OUTPUT"
+          echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
           echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
