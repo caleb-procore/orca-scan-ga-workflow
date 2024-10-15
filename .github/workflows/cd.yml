@@ -183,17 +183,27 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
 
       - name: Debug Git Status
         run: |
           git status
 
-      - name: Checkout target branch
-        run: git checkout ${{ github.event.pull_request.base.ref }}
+      - name: Checkout Head Branch
+        if: github.event_name == 'pull_request'
+        run: git checkout ${{ github.event.pull_request.head.ref }}
 
       - name: Debug Git Status
         run: |
           git status
+
+#      - name: Checkout target branch
+#        run: git checkout ${{ github.event.pull_request.base.ref }}
+#
+#      - name: Debug Git Status
+#        run: |
+#          git status
 
       - name: Build Docker Image on simulated merge
         if: github.event_name == 'pull_request'
