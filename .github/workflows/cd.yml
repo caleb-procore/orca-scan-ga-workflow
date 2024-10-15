@@ -63,6 +63,7 @@ jobs:
       ENV: ${{ steps.set_environment.outputs.ENV }}
       OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
       APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
+      echo "APP_NAME (jobs : setup : output) = $APP_NAME"
       SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
       ACTION_TYPE: ${{ steps.set_environment.outputs.ACTION_TYPE }}
       AWS_ACCOUNT_ID: ${{ steps.set_environment.outputs.AWS_ACCOUNT_ID }}
@@ -206,10 +207,10 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
-          echo "APP_NAME | ${{ env.APP_NAME }}:${{ github.sha }}"
-          echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
+          echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}"
+          echo "APP_DIRECTORY | ${{ needs.setup.outputs..APP_DIRECTORY }}"
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
-          docker build -t ${{ env.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
 
       - name: Build Docker Image on merge to env branch (main, staging, develop)
         if: github.event_name == 'push'
