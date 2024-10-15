@@ -181,6 +181,9 @@ jobs:
     name: Build and Scan Docker Image
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout target branch
+        run: git checkout ${{ github.event.pull_request.base.ref }}
+        
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -202,7 +205,7 @@ jobs:
 
       - name: Orca Image Scan
         run: |
-          orca scan --image $ECR_REPO:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
+          orca scan --image $ECR_REPO_NAME:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
   
   #      - name: Orca Image Scan (Simulated Merge & Merge)
   #        # if: github.event_name == 'push'
