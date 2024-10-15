@@ -30,39 +30,44 @@ on:
       - staging
       - develop
 
+permissions:
+  id-token: write # need this for OIDC
+  contents: read # need this for actions/checkout
+  packages: write
+
 env:
-  OIDC_ROLE_ARN_DEV: arn:aws:iam::785368447960:role/github-actions-oidc-role
-  OIDC_ROLE_ARN_STG: arn:aws:iam::785368447960:role/github-actions-oidc-role
-  OIDC_ROLE_ARN_PROD: arn:aws:iam::723214535755:role/github-actions-oidc-role
+  AWS_ACCOUNT_ID_DEV: 785368447960
+  AWS_ACCOUNT_ID_STG: 785368447960
+  AWS_ACCOUNT_ID_PROD: 723214535755
+  OIDC_ROLE_ARN_DEV: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_DEV }}:role/github-actions-oidc-role
+  OIDC_ROLE_ARN_STG: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_STG }}:role/github-actions-oidc-role
+  OIDC_ROLE_ARN_PROD: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_PROD }}:role/github-actions-oidc-role
   APP_NAME_DEV: procore-io-platform
   APP_NAME_STG: procore-io-platform-stg
   APP_NAME_PROD: procore-io-platform
   SERVICE_NAME_DEV: polaris-backend
   SERVICE_NAME_STG: polaris-backend-stg
   SERVICE_NAME_PROD: polaris-backend
-  AWS_ACCOUNT_ID_DEV: 785368447960
-  AWS_ACCOUNT_ID_STG: 785368447960
-  AWS_ACCOUNT_ID_PROD: 723214535755
   APP_DIRECTORY: src
   DOCKERFILE_PATH: ./src/gademo/Dockerfile
+  ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
 
 jobs:
   setup:
     name: Setup Environment
     runs-on: ubuntu-latest
     outputs:
-      ENV: ${{ steps.setup.outputs.ENV }}
-      OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
-      APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
-      SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
-      ACTION_TYPE: ${{ steps.setup.outputs.ACTION_TYPE }}
-      AWS_ACCOUNT_ID: ${{ steps.setup.outputs.AWS_ACCOUNT_ID }}
-      APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
-      DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
+      ENV: ${{ steps.set_environment.outputs.ENV }}
+      OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
+      APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
+      SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
+      ACTION_TYPE: ${{ steps.set_environment.outputs.ACTION_TYPE }}
+      AWS_ACCOUNT_ID: ${{ steps.set_environment.outputs.AWS_ACCOUNT_ID }}
+      APP_DIRECTORY: ${{ env.APP_DIRECTORY }}
+      DOCKERFILE_PATH: ${{ env.DOCKERFILE_PATH }}
     steps:
-      - uses: actions/checkout@v3
       - name: Set deployment environment based on Git branch
-        id: setup
+        id: set_environment
         run: |
           if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
             ENV="prod"
@@ -102,99 +107,37 @@ jobs:
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
-          echo "APP_DIRECTORY=${{ env.APP_DIRECTORY }}" >> "$GITHUB_OUTPUT"
-          echo "DOCKERFILE_PATH=${{ env.DOCKERFILE_PATH }}" >> "$GITHUB_OUTPUT"
-
-  getparams:
-    needs: [ setup ]
-    name: Get SSM Parameters
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write # need this for OIDC
-      contents: read # need this for actions/checkout
-      packages: write
-    outputs:
-      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
-      ECS_CLUSTER_NAME: ${{ steps.ssm.outputs.ECS_CLUSTER_NAME }}
-      ECS_SERVICE_NAME: ${{ steps.ssm.outputs.ECS_SERVICE_NAME }}
-      ECS_TASK_DEFINITION_NAME: "${{ steps.ssm.outputs.ECS_TASK_DEFINITION_NAME }}"
-      ECS_CONTAINER_NAME: ${{ steps.ssm.outputs.ECS_CONTAINER_NAME }}
-      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup AWS CLI
-        uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-          role-session-name: github-action
-          aws-region: us-west-2
-      - name: Set SSM Parameter Names
-        id: ssm
-        env:
-          APP_NAME: ${{ needs.setup.outputs.APP_NAME }}
-          ENV: ${{ needs.setup.outputs.ENV }}
-          SERVICE_NAME: ${{ needs.setup.outputs.SERVICE_NAME }}
-        run: |
-          aws --version
-          echo APP_NAME=$APP_NAME
-          echo ENV=$ENV
-          echo SERVICE_NAME=$SERVICE_NAME
-
-          ##### Dynamically set the SSM Parameter Names #####
-          ECR_REPO_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-repo-name"
-          ECR_IMAGE_TAG_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-image-tag"
-          ECS_CLUSTER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-cluster-name"
-          ECS_SERVICE_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-service-name"
-          ECS_TASK_DEFINITION_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-task-definition-name"
-          ECS_CONTAINER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-container-name"
-
-          ##### Print Param Names - Validate String Interpolation worked #####
-          echo "ECR_REPO_NAME_PARAM=$ECR_REPO_NAME_PARAM"
-          echo "ECR_IMAGE_TAG_PARAM=$ECR_IMAGE_TAG_PARAM"
-          echo "ECS_CLUSTER_NAME_PARAM=$ECS_CLUSTER_NAME_PARAM"
-          echo "ECS_SERVICE_NAME_PARAM=$ECS_SERVICE_NAME_PARAM"
-          echo "ECS_TASK_DEFINITION_NAME_PARAM=$ECS_TASK_DEFINITION_NAME_PARAM"
-          echo "ECS_CONTAINER_NAME_PARAM=$ECS_CONTAINER_NAME_PARAM"
-
-          ##### Save SSM Parameter Values as GitHub Outputs #####
-          echo "ECR_REPO_NAME=$ECR_REPO_NAME" >> "$GITHUB_OUTPUT"
-          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME" >> "$GITHUB_OUTPUT"
-          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME" >> "$GITHUB_OUTPUT"
-          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" >> "$GITHUB_OUTPUT"
-          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" >> "$GITHUB_OUTPUT"
 
   build-scan:
-    needs: [ getparams ]
+    needs: [ setup ]
     name: Build and Scan Docker Image
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      packages: write
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      - name: Build Docker Image on simulated merge
+        if: github.event_name == 'pull_request'
+        run: |
+          git merge --no-ff ${{ github.event.pull_request.head.sha }}
+          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ needs.setup.outputs.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
 
-      - name: Build Docker Image
+      - name: Build Docker Image on merge to env branch (main, staging, develop)
+        if: github.event_name == 'push'
         run: |
           docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ needs.setup.outputs.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
 
-      - name: Orca Image Scan
+      - name: Orca Image Scan (Simulated Merge & Merge)
+        # if: github.event_name == 'push'
+        # if: github.event_name == 'pull_request'
         uses: orca-security/orca-image-scan-action@v1
         with:
-          image: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com/${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}
+          image: ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}
+        env:
+          ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
 
   deploy-ecs-api-container:
-    if: |
-      github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' ||
-      github.ref == 'refs/heads/develop' ||
-      github.ref == 'refs/heads/staging')
+    if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
     needs: [ build-scan ]
     name: Deploy ECS Container
     uses: ./.github/workflows/ecs.yml
@@ -207,5 +150,3 @@ jobs:
       ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
       app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
       dockerfile-path: ${{ needs.setup.outputs.DOCKERFILE_PATH }}
-      ecr-image-tag-param: ${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}
-    secrets: inherit
