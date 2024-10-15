@@ -107,9 +107,74 @@ jobs:
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+  
+  getparams:
+    needs: [ setup ]
+    runs-on: ubuntu-latest
+    name: Get SSM Parameters
+    outputs:
+      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
+      ECS_CLUSTER_NAME: ${{ steps.ssm.outputs.ECS_CLUSTER_NAME }}
+      ECS_SERVICE_NAME: ${{ steps.ssm.outputs.ECS_SERVICE_NAME }}
+      ECS_TASK_DEFINITION_NAME: "${{ steps.ssm.outputs.ECS_TASK_DEFINITION_NAME }}"
+      ECS_CONTAINER_NAME: ${{ steps.ssm.outputs.ECS_CONTAINER_NAME }}
+      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
+    steps:
+      - name: Set SSM Parameter Names
+        id: ssm
+        env:
+          APP_NAME: ${{ needs.setup.outputs.APP_NAME }}
+          ENV: ${{ needs.setup.outputs.ENV }}
+          SERVICE_NAME: ${{ needs.setup.outputs.SERVICE_NAME }}
+        run: |
+          aws --version
+          echo APP_NAME=$APP_NAME
+          echo ENV=$ENV
+          echo SERVICE_NAME=$SERVICE_NAME
+
+          ##### Dynamically set the SSM Parameter Names #####
+          ECR_REPO_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-repo-name"
+          ECR_IMAGE_TAG_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-image-tag"
+          ECS_CLUSTER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-cluster-name"
+          ECS_SERVICE_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-service-name"
+          ECS_TASK_DEFINITION_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-task-definition-name"
+          ECS_CONTAINER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-container-name"
+
+          ##### Print Param Names - Validate String Interpolation worked #####
+          echo "ECR_REPO_NAME_PARAM=$ECR_REPO_NAME_PARAM"
+          echo "ECR_IMAGE_TAG_PARAM=$ECR_IMAGE_TAG_PARAM"
+          echo "ECS_CLUSTER_NAME_PARAM=$ECS_CLUSTER_NAME_PARAM"
+          echo "ECS_SERVICE_NAME_PARAM=$ECS_SERVICE_NAME_PARAM"
+          echo "ECS_TASK_DEFINITION_NAME_PARAM=$ECS_TASK_DEFINITION_NAME_PARAM"
+          echo "ECS_CONTAINER_NAME_PARAM=$ECS_CONTAINER_NAME_PARAM"
+
+          ##### Save SSM Parameter Name as Github Outputs #####
+          ##### ecs.yaml script read/writes image tag to this SSM Parameter.
+          echo "ECR_IMAGE_TAG_PARAM=$ECR_IMAGE_TAG_PARAM" >> "$GITHUB_OUTPUT"
+
+          ##### Get SSM Parameters #####
+          ECR_REPO_NAME=$(aws ssm get-parameter --name ${ECR_REPO_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+          ECS_CLUSTER_NAME=$(aws ssm get-parameter --name ${ECS_CLUSTER_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+          ECS_SERVICE_NAME=$(aws ssm get-parameter --name ${ECS_SERVICE_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+          ECS_TASK_DEFINITION_NAME=$(aws ssm get-parameter --name ${ECS_TASK_DEFINITION_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+          ECS_CONTAINER_NAME=$(aws ssm get-parameter --name ${ECS_CONTAINER_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+
+          ##### Print SSM Parameters #####
+          echo "ECR_REPO_NAME=$ECR_REPO_NAME"
+          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME"
+          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME"
+          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME"
+          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME"
+          
+          ##### Save SSM Parameter Values as Github Outputs #####
+          echo "ECR_REPO_NAME=$ECR_REPO_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" >> "$GITHUB_OUTPUT"
 
   build-scan:
-    needs: [ setup ]
+    needs: [ getparams ]
     name: Build and Scan Docker Image
     runs-on: ubuntu-latest
     steps:
