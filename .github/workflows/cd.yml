@@ -172,6 +172,10 @@ jobs:
     needs: [ getparams ]
     name: Build and Scan Docker Image
     uses: ./.github/workflows/build-image-scan.yml
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read
+      packages: write
     with:
       aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
       app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
