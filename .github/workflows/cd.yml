@@ -205,8 +205,9 @@ jobs:
       - name: Build Docker Image on simulated merge
         if: github.event_name == 'pull_request'
         run: |
-          pwd
-          ls
+          # pwd
+          # ls
+          echo "Dockerfile Path: ${{ needs.setup.outputs.DOCKERFILE_PATH }}"
           ls -l ${{ needs.setup.outputs.DOCKERFILE_PATH }}
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
           docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ needs.setup.outputs.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
