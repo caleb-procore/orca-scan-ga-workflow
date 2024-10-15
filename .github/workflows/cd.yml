@@ -18,9 +18,10 @@
 #
 #################################################
 
-name: Set build & deploy params
+name: Continuous Deployment Workflow | Set Environment
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [ opened, synchronize, reopened ]
   push:
@@ -39,6 +40,8 @@ env:
   SERVICE_NAME_DEV: polaris-backend
   SERVICE_NAME_STG: polaris-backend-stg
   SERVICE_NAME_PROD: polaris-backend
+  APP_DIRECTORY: src
+  DOCKERFILE_PATH: ./src/gademo/Dockerfile
 
 jobs:
   setup:
@@ -89,36 +92,32 @@ jobs:
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
 
-  build-image-scan:
+  build-scan:
     needs: [ setup ]
     name: Build and Scan Docker Image
     uses: ./.github/workflows/build-image-scan.yml
     with:
+      app-directory: ${{ env.APP_DIRECTORY }}
+      dockerfile-path: ${{ env.DOCKERFILE_PATH }}
       oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
       app-name: ${{ needs.setup.outputs.APP_NAME }}
       service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
       env: ${{ needs.setup.outputs.ENV }}
       action-type: ${{ needs.setup.outputs.ACTION_TYPE }}
-  
+
   deploy-ecs-api-container:
-    if: |
-      github.event_name == 'push' &&
-      (
-        github.ref == 'refs/heads/main' ||
-        github.ref == 'refs/heads/develop' ||
-        github.ref == 'refs/heads/staging'
-      )
-    needs: [ build-image-scan ]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging')
+    needs: [ build-scan ]
     name: Deploy ECS Container
     uses: ./.github/workflows/ecs.yml
     with:
       oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-      ecr-repo-name: ${{ needs.build-image-scan.outputs.ECR_REPO_NAME }}
-      ecs-cluster-name: ${{ needs.build-image-scan.outputs.ECS_CLUSTER_NAME }}
-      ecs-service-name: ${{ needs.build-image-scan.outputs.ECS_SERVICE_NAME }}
-      ecs-task-definition-name: ${{ needs.build-image-scan.outputs.ECS_TASK_DEFINITION_NAME }}
-      ecs-container-name: ${{ needs.build-image-scan.outputs.ECS_CONTAINER_NAME }}
-      app-directory: api
-      dockerfile-path: ./Polaris.Api/Dockerfile
-      ecr-image-tag-param: ${{ needs.build-image-scan.outputs.ECR_IMAGE_TAG_PARAM }}
+      ecr-repo-name: ${{ needs.build-scan.outputs.ECR_REPO_NAME }}
+      ecs-cluster-name: ${{ needs.build-scan.outputs.ECS_CLUSTER_NAME }}
+      ecs-service-name: ${{ needs.build-scan.outputs.ECS_SERVICE_NAME }}
+      ecs-task-definition-name: ${{ needs.build-scan.outputs.ECS_TASK_DEFINITION_NAME }}
+      ecs-container-name: ${{ needs.build-scan.outputs.ECS_CONTAINER_NAME }}
+      app-directory: ${{ env.APP_DIRECTORY }}
+      dockerfile-path: ${{ env.DOCKERFILE_PATH }}
+      ecr-image-tag-param: ${{ needs.build-scan.outputs.ECR_IMAGE_TAG_PARAM }}
     secrets: inherit
