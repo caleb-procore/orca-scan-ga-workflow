@@ -213,7 +213,7 @@ jobs:
           echo "APP_NAME | $APP_NAME"
           echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
           echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
-          echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
+          # echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
           docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
 
@@ -258,5 +258,5 @@ jobs:
       ecs-service-name: ${{ needs.getparams.outputs.ECS_SERVICE_NAME }}
       ecs-task-definition-name: ${{ needs.getparams.outputs.ECS_TASK_DEFINITION_NAME }}
       ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
-      app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
-      dockerfile-path: ${{ needs.setup.outputs.DOCKERFILE_PATH }}
+      app-directory: ${{ env.APP_DIRECTORY }}
+      dockerfile-path: ${{ env.DOCKERFILE_PATH }}
