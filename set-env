@@ -1,0 +1,11 @@
+#!/bin/bash
+# pre-requisite: env var REPOS is set (directory location of all procore git repos) | e.g.,   /d/dev/procore/repos
+
+export PROJ=orca-scan-ga-workflow
+export REPO=${REPOS}/${PROJ}
+
+printf "\nPROJ=[${PROJ}]"
+printf "\nREPO=[${REPO}]"
+
+# set ssh key for github push
+source ${REPOS}/set-ssh-key
