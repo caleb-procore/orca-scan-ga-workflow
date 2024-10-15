@@ -218,11 +218,12 @@ jobs:
 
   deploy-ecs-api-container:
     # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
-    if: github.event_name == 'push' && (
-      github.ref == 'refs/heads/main' ||
-      github.ref == 'refs/heads/develop' ||
-      github.ref == 'refs/heads/staging'
-      )
+    if: false
+#    if: github.event_name == 'push' && (
+#      github.ref == 'refs/heads/main' ||
+#      github.ref == 'refs/heads/develop' ||
+#      github.ref == 'refs/heads/staging'
+#      )
     needs: [ build-scan ]
     name: Deploy ECS Container
     uses: ./.github/workflows/ecs.yml
