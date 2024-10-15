@@ -188,12 +188,12 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
-          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
+          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ needs.setup.outputs.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
 
       - name: Build Docker Image on merge to env branch (main, staging, develop)
         if: github.event_name == 'push'
         run: |
-          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
+          docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ needs.setup.outputs.DOCKERFILE_PATH }} ${{ needs.setup.outputs.APP_DIRECTORY }}
 
       - name: Orca Image Scan (Simulated Merge & Merge)
         # if: github.event_name == 'push'
