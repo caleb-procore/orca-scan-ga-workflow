@@ -258,5 +258,6 @@ jobs:
       ecs-service-name: ${{ needs.getparams.outputs.ECS_SERVICE_NAME }}
       ecs-task-definition-name: ${{ needs.getparams.outputs.ECS_TASK_DEFINITION_NAME }}
       ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
-      app-directory: ${{ env.APP_DIRECTORY }}
+      app-directory: ${{ needs.getparams.outputs.APP_DIRECTORY }}
+      # app-directory: ${{ env.APP_DIRECTORY }}
       dockerfile-path: ${{ env.DOCKERFILE_PATH }}
