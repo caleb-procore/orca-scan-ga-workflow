@@ -62,8 +62,6 @@ jobs:
     outputs:
       ENV: ${{ steps.set_environment.outputs.ENV }}
       OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
-      echo "APP_NAME ${{ env.outputs.APP_NAME }}"
-      echo "APP_NAME ${{ steps.set_environment.outputs.APP_NAME }}"
       APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
       SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
       ACTION_TYPE: ${{ steps.set_environment.outputs.ACTION_TYPE }}
@@ -77,21 +75,23 @@ jobs:
           if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
             ENV="prod"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
-            echo "saw you: APP_NAME=${{ env.APP_NAME_PROD }}"
-            echo "APP_NAME=${{ env.APP_NAME_PROD }}
-            echo "APP_NAME ${{ steps.set_environment.outputs.APP_NAME }}"
+            echo "APP_NAME=${{ env.APP_NAME_PROD }}"
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_PROD }}
           elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
             ENV="stg"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
             APP_NAME=${{ env.APP_NAME_STG }}
+            APP_NAME=${{ steps.needs.APP_NAME_STG }}
             SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_STG }}
           elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
             ENV="dev"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
             APP_NAME=${{ env.APP_NAME_DEV }}
+            APP_NAME=${{ steps.needs.APP_NAME_STG }}
+            echo "APP_NAME=${{ env.APP_NAME_DEV }}"
+            echo "APP_NAME=${{ steps.needs.APP_NAME_STG }}"
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_DEV }}
           else
