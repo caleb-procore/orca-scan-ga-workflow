@@ -59,15 +59,6 @@ jobs:
   setup:
     name: Setup Environment
     runs-on: ubuntu-latest
-    outputs:
-      ENV: ${{ steps.set_environment.outputs.ENV }}
-      OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
-      APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
-      SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
-      ACTION_TYPE: ${{ steps.set_environment.outputs.ACTION_TYPE }}
-      AWS_ACCOUNT_ID: ${{ steps.set_environment.outputs.AWS_ACCOUNT_ID }}
-      APP_DIRECTORY: ${{ env.APP_DIRECTORY }}
-      DOCKERFILE_PATH: ${{ env.DOCKERFILE_PATH }}
     steps:
       - name: Set deployment environment based on Git branch
         id: set_environment
@@ -82,7 +73,6 @@ jobs:
             ENV="stg"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
             APP_NAME=${{ env.APP_NAME_STG }}
-            # APP_NAME=${{ steps.needs.APP_NAME_STG }}
             SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_STG }}
           elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
@@ -105,13 +95,22 @@ jobs:
             ACTION_TYPE="build_scan_deploy"
           fi
 
-          echo "APP_NAME=$APP_NAME" >> "$APP_NAME"
+          # echo "APP_NAME=$APP_NAME" >> "$APP_NAME"
           echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
-          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
           echo "APP_NAME=APP_NAME" >> "$GITHUB_OUTPUT"
+          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+    outputs:
+      ENV: ${{ steps.set_outputs.outputs.ENV }}
+      APP_NAME: ${{ steps.set_outputs.outputs.app_name }}
+      OIDC_ROLE_ARN: ${{ steps.set_outputs.outputs.OIDC_ROLE_ARN }}
+      SERVICE_NAME: ${{ steps.set_outputs.outputs.SERVICE_NAME }}
+      ACTION_TYPE: ${{ steps.set_outputs.outputs.ACTION_TYPE }}
+      AWS_ACCOUNT_ID: ${{ steps.set_outputs.outputs.AWS_ACCOUNT_ID }}
+      APP_DIRECTORY: ${{ steps.set_outputs.outputs.app_directory}}
+      DOCKERFILE_PATH: ${{ steps.set_outputs.outputs.dockerfile_path }}
   
   getparams:
     needs: [ setup ]
