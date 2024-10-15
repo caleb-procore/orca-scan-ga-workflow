@@ -36,6 +36,7 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+        working-directory: src/gademo
 
 #      - name: Build the project
 #        run: dotnet build --configuration Release --no-restore
