@@ -62,7 +62,7 @@ jobs:
 
       - name: Run code analysis (Optional)
         run: dotnet tool install -g dotnet-format && dotnet format --verify-no-changes
-        working-directory: tests/gademo
+        working-directory: src/gademo
 
 #jobs:
 #  # markdown-lint:
