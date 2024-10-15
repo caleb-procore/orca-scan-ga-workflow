@@ -1,0 +1,63 @@
+﻿# on a PR of "develop" <== "feature", do a docker image build and orca scan
+
+name: Build and Scan Docker Image
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      oidc-role-arn:
+        required: true
+        type: string
+      app-name:
+        required: true
+        type: string
+      service-name:
+        required: true
+        type: string
+      env:
+        required: true
+        type: string
+      action-type:
+        required: true
+        type: string
+
+jobs:
+  build-scan:
+    name: Build and Scan Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set Docker image tag
+        id: image-tag
+        run: echo "::set-output name=tag::${{ github.sha }}"
+
+      - name: Log Action Type
+        run:
+          echo "Action Type: ${{ inputs.action-type }}"
+
+      - name: Assume OIDC Role for AWS
+        if: inputs.action-type == 'build_scan_only' || inputs.action-type == 'build_scan_deploy'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.oidc-role-arn }}
+          role-session-name: github-action
+          aws-region: us-west-2
+
+      if [ "${{ inputs.action-type }}" == "build_scan_only" ]; then
+      echo "Simulating merge process..."
+      elif [ "${{ inputs.action-type }}" == "build_scan_deploy" ]; then
+      echo "Performing real merge..."
+      fi
+      docker build -t ${{ inputs.app-name }}:${{ steps.image-tag.outputs.tag }} -f ./Polaris.Api/Dockerfile .
+
+      - name: Scan Docker Image with Orca
+        uses: orca-security/orca-image-scan-action@v1
+        with:
+          image: ${{ inputs.app-name }}:${{ steps.image-tag.outputs.tag }}
+          fail-build: true

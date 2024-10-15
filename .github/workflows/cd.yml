@@ -1,0 +1,124 @@
+#################################################
+#
+# Summary
+# On a PR, simulate a merge (no commit), build and scan the Docker image only
+# On a merge, build, scan and deploy the Docker image to ECR.
+# 
+# Pre-requisites: 
+#
+# 1. IAM OIDC Role for Github Actions in the target AWS account.
+#
+# 2. SSM Parameters for the following:
+#     ECR Repo Name
+#     ECR Image Tag
+#     ECS Cluster Name
+#     ECS Service Name
+#     ECS Task Definition Name
+#     ECS Container Name
+#
+#################################################
+
+name: Set build & deploy params
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+
+env:
+  OIDC_ROLE_ARN_DEV: arn:aws:iam::785368447960:role/github-actions-oidc-role
+  OIDC_ROLE_ARN_STG: arn:aws:iam::785368447960:role/github-actions-oidc-role
+  OIDC_ROLE_ARN_PROD: arn:aws:iam::723214535755:role/github-actions-oidc-role
+  APP_NAME_DEV: procore-io-platform
+  APP_NAME_STG: procore-io-platform-stg
+  APP_NAME_PROD: procore-io-platform
+  SERVICE_NAME_DEV: polaris-backend
+  SERVICE_NAME_STG: polaris-backend-stg
+  SERVICE_NAME_PROD: polaris-backend
+
+jobs:
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    outputs:
+      ENV: ${{ steps.setup.outputs.ENV }}
+      OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
+      APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
+      SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
+      ACTION_TYPE: ${{ steps.setup.outputs.ACTION_TYPE }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set deployment environment based on Git branch
+        id: setup
+        run: |
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            ENV="prod"
+            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
+            APP_NAME=${{ env.APP_NAME_PROD }}
+            SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
+          elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
+            ENV="stg"
+            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
+            APP_NAME=${{ env.APP_NAME_STG }}
+            SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
+          elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
+            ENV="dev"
+            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
+            APP_NAME=${{ env.APP_NAME_DEV }}
+            SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
+          else
+            ENV="dev"
+            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
+            APP_NAME=${{ env.APP_NAME_DEV }}
+            SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
+          fi
+
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            ACTION_TYPE="build_scan_only"
+          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            ACTION_TYPE="build_scan_deploy"
+          fi
+
+          echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
+          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
+          echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
+          echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
+          echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
+
+  build-image-scan:
+    needs: [ setup ]
+    name: Build and Scan Docker Image
+    uses: ./.github/workflows/build-image-scan.yml
+    with:
+      oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+      app-name: ${{ needs.setup.outputs.APP_NAME }}
+      service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
+      env: ${{ needs.setup.outputs.ENV }}
+      action-type: ${{ needs.setup.outputs.ACTION_TYPE }}
+  
+  deploy-ecs-api-container:
+    if: |
+      github.event_name == 'push' &&
+      (
+        github.ref == 'refs/heads/main' ||
+        github.ref == 'refs/heads/develop' ||
+        github.ref == 'refs/heads/staging'
+      )
+    needs: [ build-image-scan ]
+    name: Deploy ECS Container
+    uses: ./.github/workflows/ecs.yml
+    with:
+      oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+      ecr-repo-name: ${{ needs.build-image-scan.outputs.ECR_REPO_NAME }}
+      ecs-cluster-name: ${{ needs.build-image-scan.outputs.ECS_CLUSTER_NAME }}
+      ecs-service-name: ${{ needs.build-image-scan.outputs.ECS_SERVICE_NAME }}
+      ecs-task-definition-name: ${{ needs.build-image-scan.outputs.ECS_TASK_DEFINITION_NAME }}
+      ecs-container-name: ${{ needs.build-image-scan.outputs.ECS_CONTAINER_NAME }}
+      app-directory: api
+      dockerfile-path: ./Polaris.Api/Dockerfile
+      ecr-image-tag-param: ${{ needs.build-image-scan.outputs.ECR_IMAGE_TAG_PARAM }}
+    secrets: inherit

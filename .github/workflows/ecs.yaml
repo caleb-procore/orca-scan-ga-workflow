@@ -1,0 +1,167 @@
+name: Docker Image Build -> Orca Scan -> Image Push to AWS ECR -> ECS Deploy
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      should_deploy:
+        required: false
+        type: boolean
+        default: false
+        description: |
+          Determines whether to push Docker image (may want to build and scan only manually).
+          For testing of orca image scanning on any developer feature branch without deploying.
+          Should be set to true after testing and before PR merge.
+          Can also be tested locally with Orca CLI.
+      app-directory:
+        required: false
+        type: string
+        default: "."
+        description: Used to specify the path to the application directory.
+      dockerfile-path:
+        required: false
+        type: string
+        default: "./Dockerfile"
+        description: Used to specify the path to the Dockerfile.
+      oidc-role-arn:
+        required: true
+        type: string
+        description: Used to specify the OIDC role ARN.
+      ecs-cluster-name:
+        required: true
+        type: string
+        description: Used to specify the ECS cluster name.
+      ecs-service-name:
+        required: true
+        type: string
+        description: Used to specify the ECS service name.
+      ecs-task-definition-name:
+        required: true
+        type: string
+        description: Used to specify the ECS task definition name.
+      ecs-container-name:
+        required: true
+        type: string
+        description: Used to specify the ECS container name.
+      ecr-repo-name:
+        required: true
+        type: string
+        description: Used to specify the ECR repository name.
+      ecr-image-tag-param:
+        required: false
+        type: string
+        description: Used to specify the SSM parameter for the ECR image tag.
+        # default: "/procore-io-platform/dev/procore-portal-backend/ecr-image-tag"
+      region:
+        required: false
+        type: string
+        default: us-west-2
+        description: Used to specify the AWS region.
+
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.oidc-role-arn }}
+          role-session-name: github-action
+          aws-region: ${{ inputs.region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: true
+
+      - name: Docker build
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPO: ${{ inputs.ecr-repo-name }}
+          IMAGE_TAG: ${{ github.sha }}
+          DOCKER_BUILDKIT: 1
+        run: |
+          echo "ECR Registry: $ECR_REGISTRY"
+          echo "ECR Repository: $ECR_REPO"
+          echo "Image Tag: $IMAGE_TAG"
+          cd ${{ inputs.app-directory }}
+          docker build . -t $ECR_REPO:$IMAGE_TAG -f ${{ inputs.dockerfile-path }}
+
+      - name: Install Orca CLI
+        run: |
+          curl -L https://download.orcasecurity.io/orca-cli-linux -o /usr/local/bin/orca
+          chmod +x /usr/local/bin/orca
+
+      - name: Orca Image Scan
+        run: |
+          orca scan --image $ECR_REPO:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
+
+      # Conditional: Tag and push image to Amazon ECR on orca scan success 
+      - name: Docker tag and push image to Amazon ECR
+        id: tag-and-push-image
+        if: ${{ inputs.should_deploy == 'true' && success() }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPO: ${{ inputs.ecr-repo-name }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker tag $ECR_REPO:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      # Conditional: only on orca scan success 
+      - name: Download task definition
+        if: ${{ inputs.should_deploy == 'true' && success() }}
+        id: download-task-def
+        env:
+          TASK_DEFINITION_NAME: ${{ inputs.ecs-task-definition-name }}
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition $TASK_DEFINITION_NAME \
+            --query taskDefinition > task-definition.json
+
+      # Conditional: only on orca scan success
+      - name: Fill in the new image ID in the SSM parameter
+        if: ${{ inputs.should_deploy == 'true' && success() }}
+        env:
+          ECR_IMAGE_TAG_PARAM: ${{ inputs.ecr-image-tag-param }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws ssm put-parameter \
+            --name $ECR_IMAGE_TAG_PARAM \
+            --value $IMAGE_TAG \
+            --overwrite
+
+      # Conditional: only on orca scan success
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        if: ${{ inputs.should_deploy == 'true' && success() }}
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ inputs.ecs-container-name }}
+          image: ${{ steps.tag-and-push-image.outputs.image }}
+
+      # Conditional: only on orca scan success
+      - name: Deploy Amazon ECS task definition
+        if: ${{ inputs.should_deploy == 'true' && success() }}
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ inputs.ecs-service-name }}
+          cluster: ${{ inputs.ecs-cluster-name }}
+          wait-for-service-stability: true
