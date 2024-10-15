@@ -181,12 +181,12 @@ jobs:
     name: Build and Scan Docker Image
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout target branch
-        run: git checkout ${{ github.event.pull_request.base.ref }}
-        
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Checkout target branch
+        run: git checkout ${{ github.event.pull_request.base.ref }}
+      
       - name: Build Docker Image on simulated merge
         if: github.event_name == 'pull_request'
         run: |
@@ -219,11 +219,11 @@ jobs:
   deploy-ecs-api-container:
     # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
     if: false
-#    if: github.event_name == 'push' && (
-#      github.ref == 'refs/heads/main' ||
-#      github.ref == 'refs/heads/develop' ||
-#      github.ref == 'refs/heads/staging'
-#      )
+    #    if: github.event_name == 'push' && (
+    #      github.ref == 'refs/heads/main' ||
+    #      github.ref == 'refs/heads/develop' ||
+    #      github.ref == 'refs/heads/staging'
+    #      )
     needs: [ build-scan ]
     name: Deploy ECS Container
     uses: ./.github/workflows/ecs.yml
