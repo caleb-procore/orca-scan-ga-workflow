@@ -209,15 +209,15 @@ jobs:
         run: |
           git status
 
-#      - name: Determine Action Type
-#        id: determine_action_type
-#        run: |
-#          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-#            ACTION_TYPE="build_scan_only"
-#          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-#            ACTION_TYPE="build_scan_deploy"
-#          fi
-#          echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
+      - name: Determine Action Type
+        id: determine_action_type
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            ACTION_TYPE="build_scan_only"
+          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            ACTION_TYPE="build_scan_deploy"
+          fi
+          echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
 #
 #      - name: Trigger Build Image Scan Workflow
 #        uses: .github/workflows/build-image-scan.yml
