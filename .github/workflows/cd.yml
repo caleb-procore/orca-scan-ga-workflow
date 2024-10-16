@@ -217,6 +217,7 @@ jobs:
           elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
             ACTION_TYPE="build_scan_deploy"
           fi
+          echo "ACTION_TYPE: $ACTION_TYPE"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
 #
 #      - name: Trigger Build Image Scan Workflow
