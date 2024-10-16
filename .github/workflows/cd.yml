@@ -177,6 +177,26 @@ jobs:
     name: Build Image Scan
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout target branch of the pull request (dev, staging, main)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Fetch all branches
+        run: git fetch --all
+
+      - name: Debug Git Status
+        run: |
+          git status
+
+      - name: Checkout the latest commit from the head of pull request
+        if: github.event_name == 'pull_request'
+        run: git checkout ${{ github.event.pull_request.head.ref }}
+
+      - name: Debug Git Status
+        run: |
+          git status
       - name: Determine Action Type
         id: determine_action_type
         run: |
@@ -188,7 +208,7 @@ jobs:
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
 
       - name: Trigger Build Image Scan Workflow
-        uses: ./.github/workflows/build-image-scan.yml
+        uses: .github/workflows/build-image-scan.yml
         with:
           action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}
           oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
