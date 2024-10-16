@@ -39,47 +39,104 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Checkout Repository
+      - name: Checkout target branch of the pull request (dev, staging, main)
         uses: actions/checkout@v3
-
-      - name: Assume OIDC Role
-        id: assume-role
-        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ inputs.oidc-role-arn }}
-          role-session-name: github-action
-          aws-region: us-west-2
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
 
-      - name: Set Docker Build Image Tag
-        id: image-tag
-        run: |
-          IMAGE_TAG=${GITHUB_SHA}
-          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+      - name: Fetch all branches
+        run: git fetch --all
 
-      - name: Docker build
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ inputs.aws-account-id }}.dkr.ecr.us-west-2.amazonaws.com
-          ECR_REPO: ${{ inputs.app-name }}
-          IMAGE_TAG: ${{ github.sha }}
-          DOCKER_BUILDKIT: 1
+      - name: Debug Git Status
         run: |
-          echo "ECR Registry: $ECR_REGISTRY"
-          echo "ECR Repository: $ECR_REPO"
-          echo "Image Tag: $IMAGE_TAG"
-          if [ "${{ inputs.action-type }}" == "build_scan_only" ]; then
-            echo "PR: Building Docker image and scanning on a simulated merge..."
-            git fetch origin $GITHUB_BASE_REF
-            git merge --no-commit --no-ff origin/$GITHUB_BASE_REF
-          else
-            echo "merge: Building Docker image and scanning ..."
-          fi
-          cd ${{ inputs.app-directory }}
-          docker build . -t $ECR_REPO:$IMAGE_TAG -f ${{ inputs.dockerfile-path }}
+          git status
+
+      - name: Checkout the latest commit from the head of pull request
+        if: github.event_name == 'pull_request'
+        run: git checkout ${{ github.event.pull_request.head.ref }}
+
+      - name: Debug Git Status
+        run: |
+          git status
+
+      - name: Build Docker Image on simulated merge
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}"
+          echo "APP_NAME | ${{ needs.setup.outputs.app_name }}"
+          echo "APP_NAME | ${{ env.APP_NAME }}"
+          echo "APP_NAME | $APP_NAME"
+          echo "APP_NAME | ${{ needs.getparams.outputs.APP_NAME}}"
+          echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
+          echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
+          # echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
+          git merge --no-ff ${{ github.event.pull_request.head.sha }}
+          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+          # docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }} 
+          # echo "ECR_REPO_NAME | $ECR_REPO_NAME"
+          # echo "IMG_TAG | $IMG_TAG"
+          # echo "ECR_REPO_NAME | ${{ steps.ssm.outputs.ECR_REPO_NAME }}"
+          # echo "IMG_TAG | ${{ steps.ssm.outputs.IMG_TAG}}"
+          # docker build -t ${{ steps.ssm.outputs.ECR_REPO_NAME }}:${{ steps.ssm.outputs.IMG_TAG}} -f ${{ env.DOCKERFILE_PATH }}
+          echo "ECR_REPO_NAME | ${{ needs.getparams.outputs.ECR_REPO_NAME }}"
+          echo "ECR_IMAGE_TAG_PARAM | ${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}"
+          docker build -t ${{ needs.getparams.outputs.ECR_REPO_NAME }}:${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM}} -f ${{ env.DOCKERFILE_PATH }}
+
+          - name: Build Docker Image on merge to env branch (main, staging, develop)
+            if: github.event_name == 'push'
+            run: |
+              echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
+              echo "ECR_REPO_NAME | $ECR_REPO_NAME"
+              echo "IMG_TAG | $IMG_TAG"
+              # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+              docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }}
+
+          - name: Install Orca CLI
+            run: |
+              curl -L https://download.orcasecurity.io/orca-cli-linux -o /usr/local/bin/orca
+              chmod +x /usr/local/bin/orca
 
       - name: Orca Image Scan
-        id: scan
-        uses: orcasecurity/orca-action@v1
-        with:
-          api-key: ${{ secrets.ORCA_API_TOKEN }}
-          image: ${{ inputs.app-name }}:${{ github.sha }}
+        id: orca-image-scan
+        # uses: orcasecurity/orca-action@v1
+        #   with:
+        #     api-key: ${{ secrets.ORCA_API_TOKEN }}
+        #     image: ${{ inputs.app-name }}:${{ github.sha }}
+        run: |
+          orca scan --image $ECR_REPO_NAME:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
+
+#      - name: Assume OIDC Role
+#        id: assume-role
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          role-to-assume: ${{ inputs.oidc-role-arn }}
+#          role-session-name: github-action
+#          aws-region: us-west-2
+
+#      - name: Set Docker Build Image Tag
+#        id: image-tag
+#        run: |
+#          IMAGE_TAG=${GITHUB_SHA}
+#          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+#
+#      - name: Docker build
+#        id: build-image
+#        env:
+#          ECR_REGISTRY: ${{ inputs.aws-account-id }}.dkr.ecr.us-west-2.amazonaws.com
+#          ECR_REPO: ${{ inputs.app-name }}
+#          IMAGE_TAG: ${{ github.sha }}
+#          DOCKER_BUILDKIT: 1
+#        run: |
+#          echo "ECR Registry: $ECR_REGISTRY"
+#          echo "ECR Repository: $ECR_REPO"
+#          echo "Image Tag: $IMAGE_TAG"
+#          if [ "${{ inputs.action-type }}" == "build_scan_only" ]; then
+#            echo "PR: Building Docker image and scanning on a simulated merge..."
+#            git fetch origin $GITHUB_BASE_REF
+#            git merge --no-commit --no-ff origin/$GITHUB_BASE_REF
+#          else
+#            echo "merge: Building Docker image and scanning ..."
+#          fi
+#          cd ${{ inputs.app-directory }}
+#          docker build . -t $ECR_REPO:$IMAGE_TAG -f ${{ inputs.dockerfile-path }}

@@ -89,25 +89,17 @@ jobs:
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_DEV }}
           fi
 
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            ACTION_TYPE="build_scan_only"
-          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-            ACTION_TYPE="build_scan_deploy"
-          fi
-
           # echo "APP_NAME=$APP_NAME" >> "$APP_NAME"
           echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
-          echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
           echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
+          echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
-          echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
           echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
     outputs:
       ENV: ${{ steps.setup.outputs.ENV }}
-      APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
       OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
+      APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
       SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
-      ACTION_TYPE: ${{ steps.setup.outputs.ACTION_TYPE }}
       AWS_ACCOUNT_ID: ${{ steps.setup.outputs.AWS_ACCOUNT_ID }}
       APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
       DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
@@ -177,82 +169,36 @@ jobs:
           echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" >> "$GITHUB_OUTPUT"
           echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" >> "$GITHUB_OUTPUT"
 
-  build-scan:
+  # on PR: simulate a merge and build image, scan
+  # merge: build image and scan on actual merge 
+  # New Step - Call build-image-scan.yml based on Action Type
+  build-image-scan:
     needs: [ getparams ]
-    name: Build and Scan Docker Image
+    name: Build Image Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout target branch of the pull request (dev, staging, main)
-        uses: actions/checkout@v3
+      - name: Determine Action Type
+        id: determine_action_type
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            ACTION_TYPE="build_scan_only"
+          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            ACTION_TYPE="build_scan_deploy"
+          fi
+          echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Build Image Scan Workflow
+        uses: ./.github/workflows/build-image-scan.yml
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          fetch-depth: 0
-
-      - name: Fetch all branches
-        run: git fetch --all
-
-      - name: Debug Git Status
-        run: |
-          git status
-
-      - name: Checkout the latest commit from the head of pull request
-        if: github.event_name == 'pull_request'
-        run: git checkout ${{ github.event.pull_request.head.ref }}
-
-      - name: Debug Git Status
-        run: |
-          git status
-
-      - name: Build Docker Image on simulated merge
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}"
-          echo "APP_NAME | ${{ needs.setup.outputs.app_name }}"
-          echo "APP_NAME | ${{ env.APP_NAME }}"
-          echo "APP_NAME | $APP_NAME"
-          echo "APP_NAME | ${{ needs.getparams.outputs.APP_NAME}}"
-          echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
-          echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
-          # echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
-          git merge --no-ff ${{ github.event.pull_request.head.sha }}
-          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
-          # docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }} 
-          # echo "ECR_REPO_NAME | $ECR_REPO_NAME"
-          # echo "IMG_TAG | $IMG_TAG"
-          # echo "ECR_REPO_NAME | ${{ steps.ssm.outputs.ECR_REPO_NAME }}"
-          # echo "IMG_TAG | ${{ steps.ssm.outputs.IMG_TAG}}"
-          # docker build -t ${{ steps.ssm.outputs.ECR_REPO_NAME }}:${{ steps.ssm.outputs.IMG_TAG}} -f ${{ env.DOCKERFILE_PATH }}
-          echo "ECR_REPO_NAME | ${{ needs.getparams.outputs.ECR_REPO_NAME }}"
-          echo "ECR_IMAGE_TAG_PARAM | ${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}"
-          docker build -t ${{ needs.getparams.outputs.ECR_REPO_NAME }}:${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM}} -f ${{ env.DOCKERFILE_PATH }}
-
-      - name: Build Docker Image on merge to env branch (main, staging, develop)
-        if: github.event_name == 'push'
-        run: |
-          echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
-          echo "ECR_REPO_NAME | $ECR_REPO_NAME"
-          echo "IMG_TAG | $IMG_TAG"
-          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
-          docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }}
-
-      - name: Install Orca CLI
-        run: |
-          curl -L https://download.orcasecurity.io/orca-cli-linux -o /usr/local/bin/orca
-          chmod +x /usr/local/bin/orca
-
-      - name: Orca Image Scan
-        run: |
-          orca scan --image $ECR_REPO_NAME:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
+          action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}
+          oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+          aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
+          dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
+          app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
+          app-name: ${{ needs.setup.outputs.APP_NAME }}
+          service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
+          env: ${{ needs.setup.outputs.ENV }}
   
-  #      - name: Orca Image Scan (Simulated Merge & Merge)
-  #        # if: github.event_name == 'push'
-  #        # if: github.event_name == 'pull_request'
-  #        uses: orca-security/orca-image-scan-action@v1
-  #        with:
-  #          image: ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }}
-  #        env:
-  #          ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
-
   deploy-ecs-api-container:
     # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
     if: false
@@ -261,7 +207,7 @@ jobs:
     #      github.ref == 'refs/heads/develop' ||
     #      github.ref == 'refs/heads/staging'
     #      )
-    needs: [ build-scan ]
+    needs: [ build-image-scan ]
     name: Deploy ECS Container
     uses: ./.github/workflows/ecs.yml
     with:
