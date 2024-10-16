@@ -190,24 +190,25 @@ jobs:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
 
-#      - name: Debug Git Status
-#        run: |
-#          git status
+      - name: Debug Git Status
+        run: |
+          git status
 
-#      - name: Fetch all branches
-#        run: git fetch --all
-#
-#      - name: Debug Git Status
-#        run: |
-#          git status
-#
-#      - name: Checkout the latest commit from the head of pull request
-#        if: github.event_name == 'pull_request'
-#        run: git checkout ${{ github.event.pull_request.head.ref }}
-#
-#      - name: Debug Git Status
-#        run: |
-#          git status
+      - name: Fetch all branches
+        run: git fetch --all
+
+      - name: Debug Git Status
+        run: |
+          git status
+
+      - name: Checkout the latest commit from the head of pull request
+        if: github.event_name == 'pull_request'
+        run: git checkout ${{ github.event.pull_request.head.ref }}
+
+      - name: Debug Git Status
+        run: |
+          git status
+
 #      - name: Determine Action Type
 #        id: determine_action_type
 #        run: |
