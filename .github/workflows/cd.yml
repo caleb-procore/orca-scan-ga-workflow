@@ -111,7 +111,7 @@ jobs:
       APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
       DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
   
-  getparams:
+  set-ssm-params:
     needs: [ setup ]
     runs-on: ubuntu-latest
     name: Get SSM Parameters
@@ -180,7 +180,7 @@ jobs:
   # merge: build image and scan on actual merge 
   # New Step - Call build-image-scan.yml based on Action Type
   build-image-scan:
-    # needs: [ getparams ]
+    # needs: [ set-ssm-params ]
     name: Build Image Scan
     runs-on: ubuntu-latest
     steps:
@@ -190,9 +190,9 @@ jobs:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
 
-      - name: Debug Git Status
-        run: |
-          git status
+#      - name: Debug Git Status
+#        run: |
+#          git status
 
 #      - name: Fetch all branches
 #        run: git fetch --all
