@@ -180,7 +180,7 @@ jobs:
   # merge: build image and scan on actual merge 
   # New Step - Call build-image-scan.yml based on Action Type
   build-image-scan:
-    # needs: [ set-ssm-params ]
+    needs: [ set-ssm-params ]
     name: Build Image Scan
     runs-on: ubuntu-latest
     steps:
