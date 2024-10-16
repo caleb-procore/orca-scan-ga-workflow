@@ -56,6 +56,13 @@ env:
   ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
 
 jobs:
+  no-op:
+    name: No Operation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Do nothing
+        run: echo "No operation performed"
+  
   setup:
     name: Setup Environment
     runs-on: ubuntu-latest
@@ -172,73 +179,73 @@ jobs:
   # on PR: simulate a merge and build image, scan
   # merge: build image and scan on actual merge 
   # New Step - Call build-image-scan.yml based on Action Type
-  build-image-scan:
-    needs: [ getparams ]
-    name: Build Image Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout target branch of the pull request (dev, staging, main)
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          fetch-depth: 0
+#  build-image-scan:
+#    needs: [ getparams ]
+#    name: Build Image Scan
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout target branch of the pull request (dev, staging, main)
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ github.event.pull_request.base.ref }}
+#          fetch-depth: 0
+#
+#      - name: Fetch all branches
+#        run: git fetch --all
+#
+#      - name: Debug Git Status
+#        run: |
+#          git status
+#
+#      - name: Checkout the latest commit from the head of pull request
+#        if: github.event_name == 'pull_request'
+#        run: git checkout ${{ github.event.pull_request.head.ref }}
+#
+#      - name: Debug Git Status
+#        run: |
+#          git status
+#      - name: Determine Action Type
+#        id: determine_action_type
+#        run: |
+#          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+#            ACTION_TYPE="build_scan_only"
+#          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+#            ACTION_TYPE="build_scan_deploy"
+#          fi
+#          echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
+#
+#      - name: Trigger Build Image Scan Workflow
+#        uses: .github/workflows/build-image-scan.yml
+#        with:
+#          action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}
+#          oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+#          aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
+#          dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
+#          app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
+#          app-name: ${{ needs.setup.outputs.APP_NAME }}
+#          service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
+#          env: ${{ needs.setup.outputs.ENV }}
 
-      - name: Fetch all branches
-        run: git fetch --all
-
-      - name: Debug Git Status
-        run: |
-          git status
-
-      - name: Checkout the latest commit from the head of pull request
-        if: github.event_name == 'pull_request'
-        run: git checkout ${{ github.event.pull_request.head.ref }}
-
-      - name: Debug Git Status
-        run: |
-          git status
-      - name: Determine Action Type
-        id: determine_action_type
-        run: |
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            ACTION_TYPE="build_scan_only"
-          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-            ACTION_TYPE="build_scan_deploy"
-          fi
-          echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
-
-      - name: Trigger Build Image Scan Workflow
-        uses: .github/workflows/build-image-scan.yml
-        with:
-          action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}
-          oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-          aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
-          dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
-          app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
-          app-name: ${{ needs.setup.outputs.APP_NAME }}
-          service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
-          env: ${{ needs.setup.outputs.ENV }}
-  
-  deploy-ecs-api-container:
-    # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
-    if: false
-    #    if: github.event_name == 'push' && (
-    #      github.ref == 'refs/heads/main' ||
-    #      github.ref == 'refs/heads/develop' ||
-    #      github.ref == 'refs/heads/staging'
-    #      )
-    needs: [ build-image-scan ]
-    name: Deploy ECS Container
-    uses: ./.github/workflows/ecs.yml
-    with:
-      oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-      ecr-repo-name: ${{ needs.getparams.outputs.ECR_REPO_NAME }}
-      ecs-cluster-name: ${{ needs.getparams.outputs.ECS_CLUSTER_NAME }}
-      ecs-service-name: ${{ needs.getparams.outputs.ECS_SERVICE_NAME }}
-      ecs-task-definition-name: ${{ needs.getparams.outputs.ECS_TASK_DEFINITION_NAME }}
-      ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
-      app-directory: ${{ needs.getparams.outputs.APP_DIRECTORY }}
-      dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
-      ecr-image-tag-param: "${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}"
-      # app-directory: ${{ env.APP_DIRECTORY }}
-      # dockerfile-path: ${{ env.DOCKERFILE_PATH }}
+#  deploy-ecs-api-container:
+#    # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
+#    if: false
+#    #    if: github.event_name == 'push' && (
+#    #      github.ref == 'refs/heads/main' ||
+#    #      github.ref == 'refs/heads/develop' ||
+#    #      github.ref == 'refs/heads/staging'
+#    #      )
+#    needs: [ build-image-scan ]
+#    name: Deploy ECS Container
+#    uses: ./.github/workflows/ecs.yml
+#    with:
+#      oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+#      ecr-repo-name: ${{ needs.getparams.outputs.ECR_REPO_NAME }}
+#      ecs-cluster-name: ${{ needs.getparams.outputs.ECS_CLUSTER_NAME }}
+#      ecs-service-name: ${{ needs.getparams.outputs.ECS_SERVICE_NAME }}
+#      ecs-task-definition-name: ${{ needs.getparams.outputs.ECS_TASK_DEFINITION_NAME }}
+#      ecs-container-name: ${{ needs.getparams.outputs.ECS_CONTAINER_NAME }}
+#      app-directory: ${{ needs.getparams.outputs.APP_DIRECTORY }}
+#      dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
+#      ecr-image-tag-param: "${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}"
+#      # app-directory: ${{ env.APP_DIRECTORY }}
+#      # dockerfile-path: ${{ env.DOCKERFILE_PATH }}
