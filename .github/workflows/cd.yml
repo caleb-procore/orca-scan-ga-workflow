@@ -190,23 +190,19 @@ jobs:
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 0
 
-      - name: Debug Git Status
+      - name: Git Status
         run: |
           git status
 
       - name: Fetch all branches
-        run: git fetch --all
-
-      - name: Debug Git Status
         run: |
+          git fetch --all
           git status
 
       - name: Checkout the latest commit from the head of pull request
         if: github.event_name == 'pull_request'
-        run: git checkout ${{ github.event.pull_request.head.ref }}
-
-      - name: Debug Git Status
         run: |
+          git checkout ${{ github.event.pull_request.head.ref }}
           git status
 
       - name: Determine Action Type
@@ -219,7 +215,7 @@ jobs:
           fi
           echo "ACTION_TYPE: $ACTION_TYPE"
           echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
-#
+
 #      - name: Trigger Build Image Scan Workflow
 #        uses: .github/workflows/build-image-scan.yml
 #        with:
