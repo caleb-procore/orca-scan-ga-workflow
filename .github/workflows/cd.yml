@@ -72,31 +72,25 @@ jobs:
       - name: Set deployment environment based on Git branch
         id: set_environment
         run: |
-          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+          case "$GITHUB_REF" in "refs/heads/main")
             ENV="prod"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             APP_NAME=${{ env.APP_NAME_PROD }}
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
             AWS_ACCT_ID=${{ env.AWS_ACCT_ID_PROD }}
-          elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
+          "refs/heads/staging")
             ENV="stg"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
             APP_NAME=${{ env.APP_NAME_STG }}
             SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
             AWS_ACCT_ID=${{ env.AWS_ACCT_ID_STG }}
-          elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
+          "refs/heads/develop)
             ENV="dev"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
             APP_NAME=${{ env.APP_NAME_DEV }}
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
             AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
-          else
-            ENV="dev"
-            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
-            APP_NAME=${{ env.APP_NAME_DEV }}
-            SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
-            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
-          fi
+          esac 
 
           # echo "APP_NAME=$APP_NAME" | tee -a "$APP_NAME"
           echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
@@ -114,7 +108,7 @@ jobs:
       APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
       DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
   
-  set-ecr-params:
+  set-ecr-img-params:
     needs: [ setup ]
     runs-on: ubuntu-latest
     name: Set ECR Parameters
@@ -126,7 +120,7 @@ jobs:
         id: set-ecr-params
         run: |
           # IMG_REG="${AWS_ACCT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-          IMG_REG="${{steps.setup.outputs.AWS_ACCT_ID}}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          IMG_REG="${{needs.setup.outputs.aws_acct_id}}.dkr.ecr.${AWS_REGION}.amazonaws.com"
           IMG_TAG="latest"
           IMG_SRC=caleb-procore/orca-scan-ga-workflow:${IMG_TAG}
           IMG_TGT=${IMG_REG}/${IMG_SRC}
