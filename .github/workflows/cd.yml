@@ -36,15 +36,15 @@ permissions:
   packages: write
 
 env:
-  AWS_ACCOUNT_ID_DEV: 785368447960
-  AWS_ACCOUNT_ID_STG: 785368447960
-  AWS_ACCOUNT_ID_PROD: 723214535755
+  AWS_ACCT_ID_DEV: 785368447960
+  AWS_ACCT_ID_STG: 785368447960
+  AWS_ACCT_ID_PROD: 723214535755
   OIDC_ROLE_ARN_DEV: arn:aws:iam::785368447960:role/github-actions-oidc-role
   OIDC_ROLE_ARN_STG: arn:aws:iam::785368447960:role/github-actions-oidc-role
   OIDC_ROLE_ARN_PROD: arn:aws:iam::723214535755:role/github-actions-oidc-role
-  #  OIDC_ROLE_ARN_DEV: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_DEV }}:role/github-actions-oidc-role
-  #  OIDC_ROLE_ARN_STG: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_STG }}:role/github-actions-oidc-role
-  #  OIDC_ROLE_ARN_PROD: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_PROD }}:role/github-actions-oidc-role
+  #  OIDC_ROLE_ARN_DEV: arn:aws:iam::${{ env.AWS_ACCT_ID_DEV }}:role/github-actions-oidc-role
+  #  OIDC_ROLE_ARN_STG: arn:aws:iam::${{ env.AWS_ACCT_ID_STG }}:role/github-actions-oidc-role
+  #  OIDC_ROLE_ARN_PROD: arn:aws:iam::${{ env.AWS_ACCT_ID_PROD }}:role/github-actions-oidc-role
   # https://us-west-2.console.aws.amazon.com/ecr/repositories/private/785368447960/caleb-procore/orca-scan-ga-workflow?region=us-west-2
   APP_NAME_DEV: caleb-procore
   APP_NAME_STG: caleb-procore
@@ -76,25 +76,25 @@ jobs:
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             APP_NAME=${{ env.APP_NAME_PROD }}
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
-            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_PROD }}
+            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_PROD }}
           elif [[ "$GITHUB_REF" == "refs/heads/staging" ]]; then
             ENV="stg"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
             APP_NAME=${{ env.APP_NAME_STG }}
             SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
-            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_STG }}
+            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_STG }}
           elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
             ENV="dev"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
             APP_NAME=${{ env.APP_NAME_DEV }}
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
-            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_DEV }}
+            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
           else
             ENV="dev"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
             APP_NAME=${{ env.APP_NAME_DEV }}
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
-            AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_DEV }}
+            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
           fi
 
           # echo "APP_NAME=$APP_NAME" | tee -a "$APP_NAME"
@@ -102,14 +102,14 @@ jobs:
           echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
           echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
           echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
-          echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" | tee -a "$GITHUB_OUTPUT"
+          echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
     
     outputs:
       ENV: ${{ steps.setup.outputs.ENV }}
       OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
       APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
       SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
-      AWS_ACCOUNT_ID: ${{ steps.setup.outputs.AWS_ACCOUNT_ID }}
+      AWS_ACCT_ID: ${{ steps.setup.outputs.AWS_ACCT_ID }}
       APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
       DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
   
@@ -216,7 +216,7 @@ jobs:
 #        with:
 #          action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}
 #          oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-#          aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
+#          aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}
 #          dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
 #          app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
 #          app-name: ${{ needs.setup.outputs.APP_NAME }}
