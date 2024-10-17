@@ -221,6 +221,17 @@ jobs:
           fi
           echo "ACTION_TYPE=$ACTION_TYPE" | tee -a "$GITHUB_OUTPUT"
 
+      - name: Debug - Print Variables Before Triggering Workflow
+        run: |
+          echo "action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}"
+          echo "oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
+          echo "aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}"
+          echo "dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}"
+          echo "app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}"
+          echo "app-name: ${{ needs.setup.outputs.APP_NAME }}"
+          echo "service-name: ${{ needs.setup.outputs.SERVICE_NAME }}"
+          echo "env: ${{ needs.setup.outputs.ENV }}"
+
 #      - name: Trigger Build Image Scan Workflow
 #        uses: .github/workflows/build-image-scan.yml
 #        with:
