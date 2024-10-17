@@ -248,19 +248,19 @@ jobs:
           echo "DEBUG: app-name: ${{ needs.setup.outputs.APP_NAME }}"
           echo "DEBUG: service-name: ${{ needs.setup.outputs.SERVICE_NAME }}"
 
-  build-image-scanprep:
-    needs: [ setup, set-ecr-img-params, build-image-scan-prep ]
-    name: Build Image Scan
-    uses: .github/workflows/build-image-scan.yml
-    with:
-      env: ${{ needs.setup.outputs.ENV }}
-      action-type: ${{ needs.build-image-scan-prep.outputs.ACTION_TYPE }}
-      oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-      aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}
-      dockerfile-path: ${{ needs.setup.outputs.DOCKERFILE_PATH }}
-      app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
-      app-name: ${{ needs.setup.outputs.APP_NAME }}
-      service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
+#  build-image-scanprep:
+#    name: Build Image Scan
+#    needs: [ setup, set-ecr-img-params, build-image-scan-prep ]
+#    uses: .github/workflows/build-image-scan.yml
+#    with:
+#      env: ${{ needs.setup.outputs.ENV }}
+#      action-type: ${{ needs.build-image-scan-prep.outputs.ACTION_TYPE }}
+#      oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+#      aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}
+#      dockerfile-path: ${{ needs.setup.outputs.DOCKERFILE_PATH }}
+#      app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
+#      app-name: ${{ needs.setup.outputs.APP_NAME }}
+#      service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
 
 #  deploy-ecs-api-container:
 #    # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
