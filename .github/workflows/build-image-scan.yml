@@ -36,41 +36,38 @@ permissions:
   packages: write
 
 jobs:
-  no-op:
-    name: No Operation
+  # no-op:
+  #   name: No Operation
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Do nothing
+  #       id: noop
+  #       run: echo "No operation performed"
+  
+  build-scan:
+    name: Build and Scan Docker Image
     runs-on: ubuntu-latest
     steps:
-      - name: Do nothing
-        id: noop
-        run: echo "No operation performed"
-      
-      #  build-scan:
-      #    name: Build and Scan Docker Image
-      #    runs-on: ubuntu-latest
-      #    steps:
-      #      - name: Checkout target branch of the pull request (dev, staging, main)
-      #        uses: actions/checkout@v4
-      #        with:
-      #          ref: ${{ github.event.pull_request.base.ref }}
-      #          fetch-depth: 0
-      #
-      #      - name: Git Status
-      #        run: |
-      #          git status
-      #
-      #      - name: Fetch all branches
-      #        run: |
-      #          git fetch --all
-      #          git status
-      #
-      #      - name: Debug Git Status
-      #        run: |
-      #
-      #      - name: Checkout the latest commit from the head of pull request
-      #        if: github.event_name == 'pull_request'
-      #        run: |
-      #          git checkout ${{ github.event.pull_request.head.ref }}
-      #          git status
+      - name: Checkout target branch of the pull request (dev, staging, main)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Git Status
+        run: |
+          git status
+
+      - name: Fetch all branches
+        run: |
+          git fetch --all
+          git status
+
+      - name: Checkout the latest commit from the head of pull request
+        if: github.event_name == 'pull_request'
+        run: |
+          git checkout ${{ github.event.pull_request.head.ref }}
+          git status
       
       #      - name: PR - Build Docker Image on simulated merge
       #        if: github.event_name == 'pull_request'
