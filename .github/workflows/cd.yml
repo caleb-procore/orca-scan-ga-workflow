@@ -109,24 +109,23 @@ jobs:
             ;;
           esac
           
-          echo "DEBUG: ENV=$ENV"
-          echo "DEBUG: OIDC_ROLE_ARN=$OIDC_ROLE_ARN"
-          echo "DEBUG: APP_NAME=$APP_NAME"
-          echo "DEBUG: SERVICE_NAME=$SERVICE_NAME"
-          echo "DEBUG: AWS_ACCT_ID=$AWS_ACCT_ID"
+          # echo "DEBUG: ENV=$ENV"
+          # echo "DEBUG: OIDC_ROLE_ARN=$OIDC_ROLE_ARN"
+          # echo "DEBUG: APP_NAME=$APP_NAME"
+          # echo "DEBUG: SERVICE_NAME=$SERVICE_NAME"
+          # echo "DEBUG: AWS_ACCT_ID=$AWS_ACCT_ID"
           
-          # echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
-          # echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
-          # echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
-          # echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
-          # echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
+          echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
+          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
+          echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
           
-          echo "ENV=$ENV" >> $GITHUB_OUTPUT
-          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
-          echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
-          echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
-          echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> $GITHUB_OUTPUT
-  
+          # echo "ENV=$ENV" >> $GITHUB_OUTPUT
+          # echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
+          # echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
+          # echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
+          # echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> $GITHUB_OUTPUT
   
   set-ecr-img-params:
     needs: [ setup ]
@@ -146,10 +145,10 @@ jobs:
           IMG_TAG="latest"
           IMG_SRC=caleb-procore/orca-scan-ga-workflow:${IMG_TAG}
           IMG_TGT=${IMG_REG}/${IMG_SRC}
-          echo "IMG_REG=$IMG_REG" | tee -a "$GITHUB_OUTPUT"
-          echo "IMG_TAG=$IMG_TAG" | tee -a "$GITHUB_OUTPUT"
-          echo "IMG_SRC=$IMG_SRC" | tee -a "$GITHUB_OUTPUT"
-          echo "IMG_TGT=$IMG_TGT" | tee -a "$GITHUB_OUTPUT"
+          echo "IMG_REG=$IMG_REG" | tee -a $GITHUB_OUTPUT
+          echo "IMG_TAG=$IMG_TAG" | tee -a $GITHUB_OUTPUT
+          echo "IMG_SRC=$IMG_SRC" | tee -a $GITHUB_OUTPUT
+          echo "IMG_TGT=$IMG_TGT" | tee -a $GITHUB_OUTPUT
   
   set-ecs-params:
     needs: [ setup ]
