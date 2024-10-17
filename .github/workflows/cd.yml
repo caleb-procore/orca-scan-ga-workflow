@@ -104,6 +104,11 @@ jobs:
             APP_NAME=${{ env.APP_NAME_DEV }}
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
             AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
+          
+            echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
+            echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
+            echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
+            echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
             ;;
           esac 
           
@@ -119,12 +124,12 @@ jobs:
           # echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
           # echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
           
-          echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
-          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
-          echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
-          echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
-          echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> "$GITHUB_OUTPUT"
-  
+#          echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
+#          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
+#          echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
+#          echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
+#          echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> "$GITHUB_OUTPUT"
+          
   
   set-ecr-img-params:
     needs: [ setup ]
