@@ -113,6 +113,26 @@ jobs:
       APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
       DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
   
+  set-ecr-params:
+    needs: [ setup ]
+    runs-on: ubuntu-latest
+    name: Set ECR Parameters
+    outputs:
+      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
+      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
+    steps:
+      - name: Set ECR Params
+        id: set-ecr-params
+        run: |
+          IMG_REG="${AWS_ACCT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          IMG_TAG="latest"
+          IMG_SRC=caleb-procore/orca-scan-ga-workflow:${IMG_TAG}
+          IMG_TGT=${IMG_REG}/${IMG_SRC}
+          echo "IMG_REG=$IMG_REG" | tee -a "$GITHUB_OUTPUT"
+          echo "IMG_TAG=$IMG_TAG" | tee -a "$GITHUB_OUTPUT"
+          echo "IMG_SRC=$IMG_SRC" | tee -a "$GITHUB_OUTPUT"
+          echo "IMG_TGT=$IMG_TGT" | tee -a "$GITHUB_OUTPUT"
+  
   set-params:
     needs: [ setup ]
     runs-on: ubuntu-latest
