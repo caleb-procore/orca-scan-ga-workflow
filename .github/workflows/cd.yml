@@ -68,6 +68,14 @@ jobs:
   setup:
     name: Set Env Params
     runs-on: ubuntu-latest
+    outputs:
+      ENV: ${{ steps.set_environment.outputs.ENV }}
+      OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
+      APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
+      SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
+      AWS_ACCT_ID: ${{ steps.set_environment.outputs.AWS_ACCT_ID }}
+      APP_DIRECTORY: ${{ env.APP_DIRECTORY }}
+      DOCKERFILE_PATH: ${{ env.DOCKERFILE_PATH }}
     steps:
       - name: Set deployment environment based on Git branch
         id: set_environment
@@ -116,15 +124,7 @@ jobs:
           echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
           echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
           echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> "$GITHUB_OUTPUT"
-    
-    outputs:
-      ENV: ${{ steps.set_environment.outputs.ENV }}
-      OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
-      APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
-      SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
-      AWS_ACCT_ID: ${{ steps.set_environment.outputs.AWS_ACCT_ID }}
-      APP_DIRECTORY: ${{ env.APP_DIRECTORY }}
-      DOCKERFILE_PATH: ${{ env.DOCKERFILE_PATH }}
+  
   
   set-ecr-img-params:
     needs: [ setup ]
