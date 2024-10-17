@@ -72,24 +72,28 @@ jobs:
       - name: Set deployment environment based on Git branch
         id: set_environment
         run: |
-          case "$GITHUB_REF" in "refs/heads/main")
+          case "$GITHUB_REF" in
+          "refs/heads/main")
             ENV="prod"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             APP_NAME=${{ env.APP_NAME_PROD }}
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
             AWS_ACCT_ID=${{ env.AWS_ACCT_ID_PROD }}
+            ;;
           "refs/heads/staging")
             ENV="stg"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
             APP_NAME=${{ env.APP_NAME_STG }}
             SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
             AWS_ACCT_ID=${{ env.AWS_ACCT_ID_STG }}
-          "refs/heads/develop")
+            ;; 
+          *)
             ENV="dev"
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
             APP_NAME=${{ env.APP_NAME_DEV }}
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
             AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
+            ;;
           esac 
 
           # echo "APP_NAME=$APP_NAME" | tee -a "$APP_NAME"
