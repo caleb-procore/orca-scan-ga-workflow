@@ -30,6 +30,11 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+  
 jobs:
   no-op:
     name: No Operation
@@ -38,37 +43,33 @@ jobs:
       - name: Do nothing
         run: echo "No operation performed"
   
-  build-scan:
-    name: Build and Scan Docker Image
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout target branch of the pull request (dev, staging, main)
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          fetch-depth: 0
-
-      - name: Git Status
-        run: |
-          git status
-
-      - name: Fetch all branches
-        run: |
-          git fetch --all
-          git status
-
-      - name: Debug Git Status
-        run: |
-
-      - name: Checkout the latest commit from the head of pull request
-        if: github.event_name == 'pull_request'
-        run: |
-          git checkout ${{ github.event.pull_request.head.ref }}
-          git status
+#  build-scan:
+#    name: Build and Scan Docker Image
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout target branch of the pull request (dev, staging, main)
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ github.event.pull_request.base.ref }}
+#          fetch-depth: 0
+#
+#      - name: Git Status
+#        run: |
+#          git status
+#
+#      - name: Fetch all branches
+#        run: |
+#          git fetch --all
+#          git status
+#
+#      - name: Debug Git Status
+#        run: |
+#
+#      - name: Checkout the latest commit from the head of pull request
+#        if: github.event_name == 'pull_request'
+#        run: |
+#          git checkout ${{ github.event.pull_request.head.ref }}
+#          git status
       
       #      - name: PR - Build Docker Image on simulated merge
       #        if: github.event_name == 'pull_request'
@@ -94,28 +95,28 @@ jobs:
       #          # docker build --no-cache --platform=linux/amd64 -t ${DOCKER_IMG_NAME} -f ${DOCKERFILE} .
       #          docker build -t ${{ needs.getparams.outputs.ECR_REPO_NAME }}:${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM}} -f ${{ env.DOCKERFILE_PATH }}
 
-      - name: Build Docker Image on real merge to env branch (main, staging, develop)
-        if: github.event_name == 'push'
-        run: |
-          echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
-          echo "ECR_REPO_NAME | $ECR_REPO_NAME"
-          echo "IMG_TAG | $IMG_TAG"
-          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
-          docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }}
-
-      - name: Install Orca CLI
-        run: |
-          curl -L https://download.orcasecurity.io/orca-cli-linux -o /usr/local/bin/orca
-          chmod +x /usr/local/bin/orca
-
-      - name: Orca Image Scan
-        id: orca-image-scan
-        # uses: orcasecurity/orca-action@v1
-        #   with:
-        #     api-key: ${{ secrets.ORCA_API_TOKEN }}
-        #     image: ${{ inputs.app-name }}:${{ github.sha }}
-        run: |
-          orca scan --image $ECR_REPO_NAME:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
+#      - name: Build Docker Image on real merge to env branch (main, staging, develop)
+#        if: github.event_name == 'push'
+#        run: |
+#          echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
+#          echo "ECR_REPO_NAME | $ECR_REPO_NAME"
+#          echo "IMG_TAG | $IMG_TAG"
+#          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+#          docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }}
+#
+#      - name: Install Orca CLI
+#        run: |
+#          curl -L https://download.orcasecurity.io/orca-cli-linux -o /usr/local/bin/orca
+#          chmod +x /usr/local/bin/orca
+#
+#      - name: Orca Image Scan
+#        id: orca-image-scan
+#        # uses: orcasecurity/orca-action@v1
+#        #   with:
+#        #     api-key: ${{ secrets.ORCA_API_TOKEN }}
+#        #     image: ${{ inputs.app-name }}:${{ github.sha }}
+#        run: |
+#          orca scan --image $ECR_REPO_NAME:$IMAGE_TAG --key ${{ secrets.ORCA_API_TOKEN }}
 
 #      - name: Assume OIDC Role
 #        id: assume-role
