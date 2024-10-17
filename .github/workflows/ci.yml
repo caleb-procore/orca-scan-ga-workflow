@@ -22,30 +22,73 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # markdown-lint:
-  #   permissions:
-  #     contents: read
-  #   uses: procore-it/pdp-cicd/.github/workflows/markdown-lint-check.yaml@main
-  #   with:
-  #     files: README.md, docs/
-  #   secrets: inherit
-  # backstage-catalog-lint:
-  #   uses: procore-it/pdp-cicd/.github/workflows/backstage-catalog-check.yaml@main
-  #   secrets: inherit
-  dotnet-build-test:
-    name: API Build & Test
-    uses: procore-it/pdp-cicd/.github/workflows/dotnet-build-test.yaml@main
-    with:
-      dotnet-version: "8"
-      # This is the path to the solution file that is used for building and running unit tests.
-      dotnet-path: orca-scan-ga-workflow
-      # This is the path to the project that will run locally in order to perform load testing.
-      dotnet-run-project: orca-scan-ga-workflow/ga-workflow-demo
-      # This is where we set environment variables that the API will use when it runs locally.
-      # dotnet-run-params: --PROCORE_API_KEY=${{github.run_id}} --PROCORE_OKTA_DOMAIN=${{vars.PROCORE_OKTA_DOMAIN}} --PROCORE_OKTA_CLIENT_ID=${{vars.PROCORE_OKTA_CLIENT_ID}} --PROCORE_MONGO_DB_ENDPOINT=${{vars.PROCORE_MONGO_DB_ENDPOINT}} --PROCORE_MONGO_DB_PORT=${{vars.PROCORE_MONGO_DB_PORT}} --PROCORE_MONGO_DB_SVC_USER_NAME=${{vars.PROCORE_MONGO_DB_SVC_USER_NAME}}
-      # This is the path to the file that artillery will run.
-      # artillery-path: api/Polaris.Tests/Load/artillery.yml
-      # These are variables that will be passed in to the artillery file when it runs.
-      # artillery-run-params: --variables '{ "token":"${{github.run_id}}" }'
-#    secrets:
-#      dotnet-run-params: --PROCORE_SNOWFLAKE_DB="${{secrets.SNOWFLAKE_CONNECTION_STRING}}" --PROCORE_MONGO_DB_SVC_USER_PWD="${{secrets.PROCORE_MONGO_DB_SVC_USER_PWD}}"
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Print current working directory
+        run: pwd
+       
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x' # Adjust to your project's .NET version
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: src/gademo
+      
+      #      - name: Build the project
+      #        run: dotnet build --configuration Release --no-restore
+      #        with:
+      #          # This is the path to the solution file that is used for building and running unit tests.
+      #          dotnet-path: orca-scan-ga-workflow
+      #          # This is the path to the project that will run locally in order to perform load testing.
+      #          dotnet-run-project: orca-scan-ga-workflow/ga-workflow-demo
+
+      - name: Run unit tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
+        working-directory: tests/gademo.Tests
+      
+      #      - name: Publish test results
+      #        if: always()
+      #        uses: actions/upload-artifact@v3
+      #        with:
+      #          name: TestResults
+      #          path: <your_test_results_path> # Use the path to test results
+
+      - name: Run code analysis (Optional)
+        run: dotnet tool install -g dotnet-format && dotnet format --verify-no-changes
+        working-directory: src/gademo
+
+#jobs:
+#  # markdown-lint:
+#  #   permissions:
+#  #     contents: read
+#  #   uses: procore-it/pdp-cicd/.github/workflows/markdown-lint-check.yaml@main
+#  #   with:
+#  #     files: README.md, docs/
+#  #   secrets: inherit
+#  # backstage-catalog-lint:
+#  #   uses: procore-it/pdp-cicd/.github/workflows/backstage-catalog-check.yaml@main
+#  #   secrets: inherit
+#  dotnet-build-test:
+#    name: API Build & Test
+#    uses: procore-it/pdp-cicd/.github/workflows/dotnet-build-test.yaml@main
+#    with:
+#      dotnet-version: "8"
+#      # This is the path to the solution file that is used for building and running unit tests.
+#      dotnet-path: orca-scan-ga-workflow
+#      # This is the path to the project that will run locally in order to perform load testing.
+#      dotnet-run-project: orca-scan-ga-workflow/ga-workflow-demo
+#      # This is where we set environment variables that the API will use when it runs locally.
+#      # dotnet-run-params: --PROCORE_API_KEY=${{github.run_id}} --PROCORE_OKTA_DOMAIN=${{vars.PROCORE_OKTA_DOMAIN}} --PROCORE_OKTA_CLIENT_ID=${{vars.PROCORE_OKTA_CLIENT_ID}} --PROCORE_MONGO_DB_ENDPOINT=${{vars.PROCORE_MONGO_DB_ENDPOINT}} --PROCORE_MONGO_DB_PORT=${{vars.PROCORE_MONGO_DB_PORT}} --PROCORE_MONGO_DB_SVC_USER_NAME=${{vars.PROCORE_MONGO_DB_SVC_USER_NAME}}
+#      # This is the path to the file that artillery will run.
+#      # artillery-path: api/Polaris.Tests/Load/artillery.yml
+#      # These are variables that will be passed in to the artillery file when it runs.
+#      # artillery-run-params: --variables '{ "token":"${{github.run_id}}" }'
+##    secrets:
+##      dotnet-run-params: --PROCORE_SNOWFLAKE_DB="${{secrets.SNOWFLAKE_CONNECTION_STRING}}" --PROCORE_MONGO_DB_SVC_USER_PWD="${{secrets.PROCORE_MONGO_DB_SVC_USER_PWD}}"

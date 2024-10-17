@@ -1,6 +1,0 @@
-﻿services:
-  ga-workflow-demo:
-    image: ga-workflow-demo
-    build:
-      context: .
-      dockerfile: ga-workflow-demo/Dockerfile
