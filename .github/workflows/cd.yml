@@ -167,11 +167,11 @@ jobs:
           ECS_CONTAINER_NAME=$(aws ssm get-parameter --name ${ECS_CONTAINER_NAME_PARAM} --output json | jq -r ".Parameter.Value")
 
           ##### Save SSM Parameter Values as Github Outputs #####
-          echo "ECR_REPO_NAME=$ECR_REPO_NAME" tee -a "$GITHUB_OUTPUT"
-          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME" tee -a "$GITHUB_OUTPUT"
-          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME" tee -a "$GITHUB_OUTPUT"
-          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" tee -a "$GITHUB_OUTPUT"
-          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" tee -a "$GITHUB_OUTPUT"
+          echo "ECR_REPO_NAME=$ECR_REPO_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" | tee -a "$GITHUB_OUTPUT"
 
   # on PR: simulate a merge and build image, scan
   # merge: build image and scan on actual merge 
