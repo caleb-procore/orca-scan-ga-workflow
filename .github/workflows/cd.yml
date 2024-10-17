@@ -111,26 +111,32 @@ jobs:
       APP_DIRECTORY: ${{ env.APP_DIRECTORY }}
       DOCKERFILE_PATH: ${{ env.DOCKERFILE_PATH }}
   
-  #  set-ecr-img-params:
-  #    needs: [ setup ]
-  #    runs-on: ubuntu-latest
-  #    name: Set ECR Params
-  #    #    outputs:
-  #    #      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
-  #    #      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
-  #    steps:
-  #      - name: Set ECR Params
-  #        id: set-ecr-params
-  #        run: |
-  #          # IMG_REG="${AWS_ACCT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-  #          IMG_REG="${{needs.setup.outputs.aws_acct_id}}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-  #          IMG_TAG="latest"
-  #          IMG_SRC=caleb-procore/orca-scan-ga-workflow:${IMG_TAG}
-  #          IMG_TGT=${IMG_REG}/${IMG_SRC}
-  #          echo "IMG_REG=$IMG_REG" | tee -a "$GITHUB_OUTPUT"
-  #          echo "IMG_TAG=$IMG_TAG" | tee -a "$GITHUB_OUTPUT"
-  #          echo "IMG_SRC=$IMG_SRC" | tee -a "$GITHUB_OUTPUT"
-  #          echo "IMG_TGT=$IMG_TGT" | tee -a "$GITHUB_OUTPUT"
+  set-ecr-img-params:
+    needs: [ setup ]
+    runs-on: ubuntu-latest
+    name: Set ECR Params
+    #    outputs:
+    #      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
+    #      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
+    steps:
+      - name: Set ECR Params
+        id: set-ecr-params
+        run: |
+          # IMG_REG="${AWS_ACCT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          IMG_REG="${{needs.setup.outputs.aws_acct_id}}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          IMG_TAG="latest"
+          IMG_SRC=caleb-procore/orca-scan-ga-workflow:${IMG_TAG}
+          IMG_TGT=${IMG_REG}/${IMG_SRC}
+          echo "IMG_REG=$IMG_REG" | tee -a "$GITHUB_OUTPUT"
+          echo "IMG_TAG=$IMG_TAG" | tee -a "$GITHUB_OUTPUT"
+          echo "IMG_SRC=$IMG_SRC" | tee -a "$GITHUB_OUTPUT"
+          echo "IMG_TGT=$IMG_TGT" | tee -a "$GITHUB_OUTPUT"
+    outputs:
+      IMG_REG: ${{ steps.set-ecr-params.outputs.IMG_REG }}
+      IMG_TAG: ${{ steps.set-ecr-params.outputs.IMG_TAG }}
+      IMG_SRC: ${{ steps.set-ecr-params.outputs.IMG_SRC }}
+      IMG_TGT: ${{ steps.set-ecr-params.outputs.IMG_TGT }}
+  
   
   #  set-params:
   #    needs: [ setup ]
