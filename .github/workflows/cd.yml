@@ -107,11 +107,11 @@ jobs:
             ;;
           esac 
           
-          echo "ENV=$ENV"
-          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN"
-          echo "APP_NAME=$APP_NAME"
-          echo "SERVICE_NAME=$SERVICE_NAME"
-          echo "AWS_ACCT_ID=$AWS_ACCT_ID"
+          echo "DEBUG: ENV=$ENV"
+          echo "DEBUG: OIDC_ROLE_ARN=$OIDC_ROLE_ARN"
+          echo "DEBUG: APP_NAME=$APP_NAME"
+          echo "DEBUG: SERVICE_NAME=$SERVICE_NAME"
+          echo "DEBUG: AWS_ACCT_ID=$AWS_ACCT_ID"
           
           # echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
           # echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
@@ -235,14 +235,14 @@ jobs:
 
       - name: Debug - Print Variables Before Triggering Workflow
         run: |
-          echo "action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}"
-          echo "oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
-          echo "aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}"
-          echo "dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}"
-          echo "app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}"
-          echo "app-name: ${{ needs.setup.outputs.APP_NAME }}"
-          echo "service-name: ${{ needs.setup.outputs.SERVICE_NAME }}"
-          echo "env: ${{ needs.setup.outputs.ENV }}"
+          echo "DEBUG: action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}"
+          echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
+          echo "DEBUG: aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}"
+          echo "DEBUG: dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}"
+          echo "DEBUG: app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}"
+          echo "DEBUG: app-name: ${{ needs.setup.outputs.APP_NAME }}"
+          echo "DEBUG: service-name: ${{ needs.setup.outputs.SERVICE_NAME }}"
+          echo "DEBUG: env: ${{ needs.setup.outputs.ENV }}"
 
 #      - name: Trigger Build Image Scan Workflow
 #        uses: .github/workflows/build-image-scan.yml
