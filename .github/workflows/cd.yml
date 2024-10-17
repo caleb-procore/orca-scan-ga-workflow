@@ -149,6 +149,16 @@ jobs:
       ECS_TASK_DEFINITION_NAME: "${{ steps.ecs.outputs.ECS_TASK_DEFINITION_NAME }}"
       ECS_CONTAINER_NAME: ${{ steps.ecs.outputs.ECS_CONTAINER_NAME }}
     steps:
+      - name: Setup AWS CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+          role-session-name: github-action
+          aws-region: ${{ env.AWS_REGION }} 
       - name: Set ECS Params
         id: ecs
         env:
