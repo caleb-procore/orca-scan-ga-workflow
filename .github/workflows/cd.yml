@@ -80,55 +80,55 @@ jobs:
       - name: Set deployment environment based on Git branch
         id: set_environment
         run: |
-               case "$GITHUB_REF" in
-               "refs/heads/main")
-               ENV="prod"
-               # todo: construct here instead of hard code above
-               OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
-               APP_NAME=${{ env.APP_NAME_PROD }}
-               SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
-               AWS_ACCT_ID=${{ env.AWS_ACCT_ID_PROD }}
-               ;;
-               "refs/heads/staging")
-               ENV="stg"
-               # todo: construct here instead of hard code above
-               OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
-               APP_NAME=${{ env.APP_NAME_STG }}
-               SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
-               AWS_ACCT_ID=${{ env.AWS_ACCT_ID_STG }}
-               ;; 
-               *)
-               ENV="dev"
-               # todo: construct here instead of hard code above
-               OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
-               APP_NAME=${{ env.APP_NAME_DEV }}
-               SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
-               AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
+          case "$GITHUB_REF" in
+          "refs/heads/main")
+            ENV="prod"
+            # todo: construct here instead of hard code above
+            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
+            APP_NAME=${{ env.APP_NAME_PROD }}
+            SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
+            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_PROD }}
+            ;;
+          "refs/heads/staging")
+            ENV="stg"
+            # todo: construct here instead of hard code above
+            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
+            APP_NAME=${{ env.APP_NAME_STG }}
+            SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
+            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_STG }}
+            ;; 
+          *)
+          ENV="dev"
+            # todo: construct here instead of hard code above
+            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
+            APP_NAME=${{ env.APP_NAME_DEV }}
+            SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
+            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
           
-          #            echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
-          #            echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
-          #            echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
-          #            echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
-               ;;
-               esac
-               
-               echo "DEBUG: ENV=$ENV"
-               echo "DEBUG: OIDC_ROLE_ARN=$OIDC_ROLE_ARN"
-               echo "DEBUG: APP_NAME=$APP_NAME"
-               echo "DEBUG: SERVICE_NAME=$SERVICE_NAME"
-               echo "DEBUG: AWS_ACCT_ID=$AWS_ACCT_ID"
+            echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
+            echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
+            echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
+            echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
+            ;;
+          esac
+          
+          echo "DEBUG: ENV=$ENV"
+          echo "DEBUG: OIDC_ROLE_ARN=$OIDC_ROLE_ARN"
+          echo "DEBUG: APP_NAME=$APP_NAME"
+          echo "DEBUG: SERVICE_NAME=$SERVICE_NAME"
+          echo "DEBUG: AWS_ACCT_ID=$AWS_ACCT_ID"
           
           # echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
           # echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
           # echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
           # echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
           # echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
-               
-               echo "ENV=$ENV" >> $GITHUB_OUTPUT
-               echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
-               echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
-               echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
-               echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> $GITHUB_OUTPUT
+  
+  #          echo "ENV=$ENV" >> $GITHUB_OUTPUT
+  #          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
+  #          echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
+  #          echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
+  #          echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> $GITHUB_OUTPUT
   
   
   set-ecr-img-params:
