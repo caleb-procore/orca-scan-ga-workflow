@@ -80,7 +80,7 @@ jobs:
           git merge --no-ff ${{ github.event.pull_request.head.sha }}
           # docker build --no-cache --platform=linux/amd64 -t ${DOCKER_IMG_NAME} -f ${DOCKERFILE} .
           # docker build -t ${{ inputs.img_src }}:${{ github.sha }}-f ${{ inputs.dockerfile-path }} ${{ inputs.app-directory }}
-          docker build -t ${{ inputs.img-src }}:latest -f ${{ inputs.dockerfile-path }} ${{ inputs.app-directory }}
+          docker build -t ${{ inputs.img-src }}:${{ github.sha }} -f ${{ inputs.dockerfile-path }} ${{ inputs.app-directory }}
 
 #      - name: Build Docker Image on real merge to env branch (main, staging, develop)
 #        if: github.event_name == 'push'
