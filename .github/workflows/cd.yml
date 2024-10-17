@@ -105,33 +105,33 @@ jobs:
     
     outputs:
       ENV: ${{ steps.setup.outputs.ENV }}
-      OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
-      APP_NAME: ${{ steps.setup.outputs.APP_NAME }}
-      SERVICE_NAME: ${{ steps.setup.outputs.SERVICE_NAME }}
-      AWS_ACCT_ID: ${{ steps.setup.outputs.AWS_ACCT_ID }}
-      APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
-      DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
+      OIDC_ROLE_ARN: ${{ steps.set_environment.outputs.OIDC_ROLE_ARN }}
+      APP_NAME: ${{ steps.set_environment.outputs.APP_NAME }}
+      SERVICE_NAME: ${{ steps.set_environment.outputs.SERVICE_NAME }}
+      AWS_ACCT_ID: ${{ steps.set_environment.outputs.AWS_ACCT_ID }}
+      APP_DIRECTORY: ${{ steps.set_environment.outputs.APP_DIRECTORY }}
+      DOCKERFILE_PATH: ${{ steps.set_environment.outputs.DOCKERFILE_PATH }}
   
-  set-ecr-img-params:
-    needs: [ setup ]
-    runs-on: ubuntu-latest
-    name: Set ECR Params
-    #    outputs:
-    #      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
-    #      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
-    steps:
-      - name: Set ECR Params
-        id: set-ecr-params
-        run: |
-          # IMG_REG="${AWS_ACCT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-          IMG_REG="${{needs.setup.outputs.aws_acct_id}}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-          IMG_TAG="latest"
-          IMG_SRC=caleb-procore/orca-scan-ga-workflow:${IMG_TAG}
-          IMG_TGT=${IMG_REG}/${IMG_SRC}
-          echo "IMG_REG=$IMG_REG" | tee -a "$GITHUB_OUTPUT"
-          echo "IMG_TAG=$IMG_TAG" | tee -a "$GITHUB_OUTPUT"
-          echo "IMG_SRC=$IMG_SRC" | tee -a "$GITHUB_OUTPUT"
-          echo "IMG_TGT=$IMG_TGT" | tee -a "$GITHUB_OUTPUT"
+  #  set-ecr-img-params:
+  #    needs: [ setup ]
+  #    runs-on: ubuntu-latest
+  #    name: Set ECR Params
+  #    #    outputs:
+  #    #      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
+  #    #      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
+  #    steps:
+  #      - name: Set ECR Params
+  #        id: set-ecr-params
+  #        run: |
+  #          # IMG_REG="${AWS_ACCT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+  #          IMG_REG="${{needs.setup.outputs.aws_acct_id}}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+  #          IMG_TAG="latest"
+  #          IMG_SRC=caleb-procore/orca-scan-ga-workflow:${IMG_TAG}
+  #          IMG_TGT=${IMG_REG}/${IMG_SRC}
+  #          echo "IMG_REG=$IMG_REG" | tee -a "$GITHUB_OUTPUT"
+  #          echo "IMG_TAG=$IMG_TAG" | tee -a "$GITHUB_OUTPUT"
+  #          echo "IMG_SRC=$IMG_SRC" | tee -a "$GITHUB_OUTPUT"
+  #          echo "IMG_TGT=$IMG_TGT" | tee -a "$GITHUB_OUTPUT"
   
   #  set-params:
   #    needs: [ setup ]
