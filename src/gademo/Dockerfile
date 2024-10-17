@@ -8,7 +8,7 @@ WORKDIR src
 COPY ["src/gademo/gademo.csproj", "src/gademo/"]
 RUN dotnet restore "src/gademo/gademo.csproj"
 COPY . .
-WORKDIR "/src/src/gademo"
+WORKDIR "src/gademo"
 RUN dotnet build "gademo.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
