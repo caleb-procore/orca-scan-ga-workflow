@@ -63,6 +63,19 @@ permissions:
   packages: write
 
 jobs:
+  set-params:
+    name: Set Docker build, push, ECS deploy params 
+    runs-on: ubuntu-latest
+    steps:
+      - name: set-docker-bild-push-ecs-deploy-params
+        id: set_environment
+        run: |
+          IMG_REG=${AWS_ACCT_ID}.dkr.ecr.us-west-2.amazonaws.com
+          # IMG_REG=${AWS_ACCT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+          IMG=caleb-procore/orca-scan-ga-workflow
+          IMG_TAG=latest
+          echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
+          
   deploy:
     name: Deploy
     runs-on: ubuntu-latest

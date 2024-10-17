@@ -45,12 +45,13 @@ env:
   #  OIDC_ROLE_ARN_DEV: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_DEV }}:role/github-actions-oidc-role
   #  OIDC_ROLE_ARN_STG: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_STG }}:role/github-actions-oidc-role
   #  OIDC_ROLE_ARN_PROD: arn:aws:iam::${{ env.AWS_ACCOUNT_ID_PROD }}:role/github-actions-oidc-role
-  APP_NAME_DEV: procore-io-platform
-  APP_NAME_STG: procore-io-platform-stg
-  APP_NAME_PROD: procore-io-platform
-  SERVICE_NAME_DEV: polaris-backend
-  SERVICE_NAME_STG: polaris-backend-stg
-  SERVICE_NAME_PROD: polaris-backend
+  # https://us-west-2.console.aws.amazon.com/ecr/repositories/private/785368447960/caleb-procore/orca-scan-ga-workflow?region=us-west-2
+  APP_NAME_DEV: caleb-procore
+  APP_NAME_STG: caleb-procore
+  APP_NAME_PROD: caleb-procore
+  SERVICE_NAME_DEV: orca-scan-ga-workflow
+  SERVICE_NAME_STG: orca-scan-ga-workflow
+  SERVICE_NAME_PROD: orca-scan-ga-workflow
   APP_DIRECTORY: src
   DOCKERFILE_PATH: src/gademo/Dockerfile
   ORCA_API_TOKEN: ${{ secrets.ORCA_API_TOKEN }}
@@ -96,12 +97,13 @@ jobs:
             AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID_DEV }}
           fi
 
-          # echo "APP_NAME=$APP_NAME" >> "$APP_NAME"
-          echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
-          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
-          echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
-          echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
-          echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+          # echo "APP_NAME=$APP_NAME" | tee -a "$APP_NAME"
+          echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
+          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
+          echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" | tee -a "$GITHUB_OUTPUT"
+    
     outputs:
       ENV: ${{ steps.setup.outputs.ENV }}
       OIDC_ROLE_ARN: ${{ steps.setup.outputs.OIDC_ROLE_ARN }}
@@ -111,17 +113,17 @@ jobs:
       APP_DIRECTORY: ${{ steps.setup.outputs.APP_DIRECTORY }}
       DOCKERFILE_PATH: ${{ steps.setup.outputs.DOCKERFILE_PATH }}
   
-  set-ssm-params:
+  set-params:
     needs: [ setup ]
     runs-on: ubuntu-latest
-    name: Get SSM Parameters
+    name: Set ECR, ECS & SSM Parameters
     outputs:
       ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
+      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
       ECS_CLUSTER_NAME: ${{ steps.ssm.outputs.ECS_CLUSTER_NAME }}
       ECS_SERVICE_NAME: ${{ steps.ssm.outputs.ECS_SERVICE_NAME }}
       ECS_TASK_DEFINITION_NAME: "${{ steps.ssm.outputs.ECS_TASK_DEFINITION_NAME }}"
       ECS_CONTAINER_NAME: ${{ steps.ssm.outputs.ECS_CONTAINER_NAME }}
-      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
     steps:
       - name: Set SSM Parameter Names
         id: ssm
@@ -138,6 +140,7 @@ jobs:
           ##### Dynamically set the SSM Parameter Names #####
           ECR_REPO_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-repo-name"
           ECR_IMAGE_TAG_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-image-tag"
+          
           ECS_CLUSTER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-cluster-name"
           ECS_SERVICE_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-service-name"
           ECS_TASK_DEFINITION_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-task-definition-name"
@@ -146,6 +149,7 @@ jobs:
           ##### Print Param Names - Validate String Interpolation worked #####
           echo "ECR_REPO_NAME_PARAM=$ECR_REPO_NAME_PARAM"
           echo "ECR_IMAGE_TAG_PARAM=$ECR_IMAGE_TAG_PARAM"
+          
           echo "ECS_CLUSTER_NAME_PARAM=$ECS_CLUSTER_NAME_PARAM"
           echo "ECS_SERVICE_NAME_PARAM=$ECS_SERVICE_NAME_PARAM"
           echo "ECS_TASK_DEFINITION_NAME_PARAM=$ECS_TASK_DEFINITION_NAME_PARAM"
@@ -153,7 +157,7 @@ jobs:
 
           ##### Save SSM Parameter Name as Github Outputs #####
           ##### ecs.yaml script read/writes image tag to this SSM Parameter.
-          echo "ECR_IMAGE_TAG_PARAM=$ECR_IMAGE_TAG_PARAM" >> "$GITHUB_OUTPUT"
+          echo "ECR_IMAGE_TAG_PARAM=$ECR_IMAGE_TAG_PARAM" | tee -a "$GITHUB_OUTPUT"
 
           ##### Get SSM Parameters #####
           ECR_REPO_NAME=$(aws ssm get-parameter --name ${ECR_REPO_NAME_PARAM} --output json | jq -r ".Parameter.Value")
@@ -162,48 +166,21 @@ jobs:
           ECS_TASK_DEFINITION_NAME=$(aws ssm get-parameter --name ${ECS_TASK_DEFINITION_NAME_PARAM} --output json | jq -r ".Parameter.Value")
           ECS_CONTAINER_NAME=$(aws ssm get-parameter --name ${ECS_CONTAINER_NAME_PARAM} --output json | jq -r ".Parameter.Value")
 
-          ##### Print SSM Parameters #####
-          echo "ECR_REPO_NAME=$ECR_REPO_NAME"
-          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME"
-          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME"
-          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME"
-          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME"
-          
           ##### Save SSM Parameter Values as Github Outputs #####
-          echo "ECR_REPO_NAME=$ECR_REPO_NAME" >> "$GITHUB_OUTPUT"
-          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME" >> "$GITHUB_OUTPUT"
-          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME" >> "$GITHUB_OUTPUT"
-          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" >> "$GITHUB_OUTPUT"
-          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" >> "$GITHUB_OUTPUT"
+          echo "ECR_REPO_NAME=$ECR_REPO_NAME" tee -a "$GITHUB_OUTPUT"
+          echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME" tee -a "$GITHUB_OUTPUT"
+          echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME" tee -a "$GITHUB_OUTPUT"
+          echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" tee -a "$GITHUB_OUTPUT"
+          echo "ECS_CONTAINER_NAME=$ECS_CONTAINER_NAME" tee -a "$GITHUB_OUTPUT"
 
   # on PR: simulate a merge and build image, scan
   # merge: build image and scan on actual merge 
   # New Step - Call build-image-scan.yml based on Action Type
   build-image-scan:
-    needs: [ set-ssm-params ]
+    needs: [ set-params ]
     name: Build Image Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout target branch of the pull request (dev, staging, main)
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          fetch-depth: 0
-
-      - name: Git Status
-        run: |
-          git status
-
-      - name: Fetch all branches
-        run: |
-          git fetch --all
-          git status
-
-      - name: Checkout the latest commit from the head of pull request
-        if: github.event_name == 'pull_request'
-        run: |
-          git checkout ${{ github.event.pull_request.head.ref }}
-          git status
 
       - name: Determine Action Type
         id: determine_action_type
@@ -213,20 +190,19 @@ jobs:
           elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
             ACTION_TYPE="build_scan_deploy"
           fi
-          echo "ACTION_TYPE: $ACTION_TYPE"
-          echo "ACTION_TYPE=$ACTION_TYPE" >> "$GITHUB_OUTPUT"
+          echo "ACTION_TYPE=$ACTION_TYPE" | tee -a "$GITHUB_OUTPUT"
 
-#      - name: Trigger Build Image Scan Workflow
-#        uses: .github/workflows/build-image-scan.yml
-#        with:
-#          action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}
-#          oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
-#          aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
-#          dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
-#          app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
-#          app-name: ${{ needs.setup.outputs.APP_NAME }}
-#          service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
-#          env: ${{ needs.setup.outputs.ENV }}
+      - name: Trigger Build Image Scan Workflow
+        uses: .github/workflows/build-image-scan.yml
+        with:
+          action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}
+          oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
+          aws-account-id: ${{ needs.setup.outputs.AWS_ACCOUNT_ID }}
+          dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}
+          app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
+          app-name: ${{ needs.setup.outputs.APP_NAME }}
+          service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
+          env: ${{ needs.setup.outputs.ENV }}
 
 #  deploy-ecs-api-container:
 #    # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'
