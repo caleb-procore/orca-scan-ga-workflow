@@ -39,6 +39,7 @@ env:
   AWS_ACCT_ID_DEV: 785368447960
   AWS_ACCT_ID_STG: 785368447960
   AWS_ACCT_ID_PROD: 723214535755
+  AWS_REGION: us-west-2
   OIDC_ROLE_ARN_DEV: arn:aws:iam::785368447960:role/github-actions-oidc-role
   OIDC_ROLE_ARN_STG: arn:aws:iam::785368447960:role/github-actions-oidc-role
   OIDC_ROLE_ARN_PROD: arn:aws:iam::723214535755:role/github-actions-oidc-role
