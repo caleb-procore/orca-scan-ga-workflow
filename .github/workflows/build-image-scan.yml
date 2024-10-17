@@ -17,9 +17,6 @@ on:
       app-directory:
         required: true
         type: string
-      img-name:
-        required: true
-        type: string
       oidc-role-arn:
         required: true
         type: string
