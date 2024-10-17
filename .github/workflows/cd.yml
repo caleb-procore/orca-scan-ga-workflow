@@ -75,6 +75,7 @@ jobs:
           case "$GITHUB_REF" in
           "refs/heads/main")
             ENV="prod"
+            # todo: construct here instead of hard code above
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
             APP_NAME=${{ env.APP_NAME_PROD }}
             SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
@@ -82,6 +83,7 @@ jobs:
             ;;
           "refs/heads/staging")
             ENV="stg"
+            # todo: construct here instead of hard code above
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
             APP_NAME=${{ env.APP_NAME_STG }}
             SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
@@ -89,6 +91,7 @@ jobs:
             ;; 
           *)
             ENV="dev"
+            # todo: construct here instead of hard code above
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
             APP_NAME=${{ env.APP_NAME_DEV }}
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
@@ -136,7 +139,6 @@ jobs:
       IMG_TAG: ${{ steps.set-ecr-params.outputs.IMG_TAG }}
       IMG_SRC: ${{ steps.set-ecr-params.outputs.IMG_SRC }}
       IMG_TGT: ${{ steps.set-ecr-params.outputs.IMG_TGT }}
-  
   
   #  set-params:
   #    needs: [ setup ]
