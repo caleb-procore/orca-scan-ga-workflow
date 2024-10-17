@@ -237,6 +237,7 @@ jobs:
       - name: Debug - Print Variables Before Triggering Workflow
         id: debug_before_triggering_build_image_scan_workflow
         run: |
+          echo "DEBUG: env: ${{ needs.setup.outputs.ENV }}"
           echo "DEBUG: action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}"
           echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
           echo "DEBUG: aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}"
@@ -244,12 +245,12 @@ jobs:
           echo "DEBUG: app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}"
           echo "DEBUG: app-name: ${{ needs.setup.outputs.APP_NAME }}"
           echo "DEBUG: service-name: ${{ needs.setup.outputs.SERVICE_NAME }}"
-          echo "DEBUG: env: ${{ needs.setup.outputs.ENV }}"
 
       - name: Trigger Build Image Scan Workflow
         id: trigger_build_image_scan_workflow
         uses: .github/workflows/build-image-scan.yml
         with:
+          env: ${{ needs.setup.outputs.ENV }}
           action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}
           oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}
           aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}
@@ -257,7 +258,6 @@ jobs:
           app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}
           app-name: ${{ needs.setup.outputs.APP_NAME }}
           service-name: ${{ needs.setup.outputs.SERVICE_NAME }}
-          env: ${{ needs.setup.outputs.ENV }}
 
 #  deploy-ecs-api-container:
 #    # if: github.event_name == 'push' && github.ref =~ 'refs/heads/(main|develop|staging)'

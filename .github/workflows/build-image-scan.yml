@@ -5,6 +5,12 @@ name: Build and Scan Docker Image
 on:
   workflow_call:
     inputs:
+      env:
+        required: true
+        type: string
+      action-type:
+        required: true
+        type: string
       aws-account-id:
         required: true
         type: string
@@ -21,12 +27,6 @@ on:
         required: true
         type: string
       service-name:
-        required: true
-        type: string
-      env:
-        required: true
-        type: string
-      action-type:
         required: true
         type: string
 
@@ -69,30 +69,30 @@ jobs:
         run: |
           git checkout ${{ github.event.pull_request.head.ref }}
           git status
-
-#      - name: PR - Build Docker Image on simulated merge
-#        if: github.event_name == 'pull_request'
-#        run: |
-#          echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}"
-#          echo "APP_NAME | ${{ needs.setup.outputs.app_name }}"
-#          echo "APP_NAME | ${{ env.APP_NAME }}"
-#          echo "APP_NAME | $APP_NAME"
-#          echo "APP_NAME | ${{ needs.getparams.outputs.APP_NAME}}"
-#          echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
-#          echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
-#          # echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
-#          git merge --no-ff ${{ github.event.pull_request.head.sha }}
-#          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
-#          # docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }} 
-#          # echo "ECR_REPO_NAME | $ECR_REPO_NAME"
-#          # echo "IMG_TAG | $IMG_TAG"
-#          # echo "ECR_REPO_NAME | ${{ steps.ssm.outputs.ECR_REPO_NAME }}"
-#          # echo "IMG_TAG | ${{ steps.ssm.outputs.IMG_TAG}}"
-#          # docker build -t ${{ steps.ssm.outputs.ECR_REPO_NAME }}:${{ steps.ssm.outputs.IMG_TAG}} -f ${{ env.DOCKERFILE_PATH }}
-#          echo "ECR_REPO_NAME | ${{ needs.getparams.outputs.ECR_REPO_NAME }}"
-#          echo "ECR_IMAGE_TAG_PARAM | ${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}"
-#          # docker build --no-cache --platform=linux/amd64 -t ${DOCKER_IMG_NAME} -f ${DOCKERFILE} .
-#          docker build -t ${{ needs.getparams.outputs.ECR_REPO_NAME }}:${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM}} -f ${{ env.DOCKERFILE_PATH }}
+      
+      #      - name: PR - Build Docker Image on simulated merge
+      #        if: github.event_name == 'pull_request'
+      #        run: |
+      #          echo "APP_NAME | ${{ needs.setup.outputs.APP_NAME }}"
+      #          echo "APP_NAME | ${{ needs.setup.outputs.app_name }}"
+      #          echo "APP_NAME | ${{ env.APP_NAME }}"
+      #          echo "APP_NAME | $APP_NAME"
+      #          echo "APP_NAME | ${{ needs.getparams.outputs.APP_NAME}}"
+      #          echo "DOCKERFILE_PATH | ${{ env.DOCKERFILE_PATH }}"
+      #          echo "APP_DIRECTORY | ${{ env.APP_DIRECTORY }}"
+      #          # echo "APP_DIRECTORY | ${{ needs.setup.outputs.APP_DIRECTORY }}"
+      #          git merge --no-ff ${{ github.event.pull_request.head.sha }}
+      #          # docker build -t ${{ needs.setup.outputs.APP_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }}
+      #          # docker build -t $ECR_REPO_NAME:$IMAGE_TAG -f ${{ env.DOCKERFILE_PATH }} ${{ env.APP_DIRECTORY }} 
+      #          # echo "ECR_REPO_NAME | $ECR_REPO_NAME"
+      #          # echo "IMG_TAG | $IMG_TAG"
+      #          # echo "ECR_REPO_NAME | ${{ steps.ssm.outputs.ECR_REPO_NAME }}"
+      #          # echo "IMG_TAG | ${{ steps.ssm.outputs.IMG_TAG}}"
+      #          # docker build -t ${{ steps.ssm.outputs.ECR_REPO_NAME }}:${{ steps.ssm.outputs.IMG_TAG}} -f ${{ env.DOCKERFILE_PATH }}
+      #          echo "ECR_REPO_NAME | ${{ needs.getparams.outputs.ECR_REPO_NAME }}"
+      #          echo "ECR_IMAGE_TAG_PARAM | ${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM }}"
+      #          # docker build --no-cache --platform=linux/amd64 -t ${DOCKER_IMG_NAME} -f ${DOCKERFILE} .
+      #          docker build -t ${{ needs.getparams.outputs.ECR_REPO_NAME }}:${{ needs.getparams.outputs.ECR_IMAGE_TAG_PARAM}} -f ${{ env.DOCKERFILE_PATH }}
 
       - name: Build Docker Image on real merge to env branch (main, staging, develop)
         if: github.event_name == 'push'
