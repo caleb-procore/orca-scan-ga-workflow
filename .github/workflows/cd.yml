@@ -137,18 +137,18 @@ jobs:
           echo "IMG_SRC=$IMG_SRC" | tee -a "$GITHUB_OUTPUT"
           echo "IMG_TGT=$IMG_TGT" | tee -a "$GITHUB_OUTPUT"
   
-  set-params:
+  set-ecs-params:
     needs: [ setup ]
     runs-on: ubuntu-latest
     name: Set ECR, ECS & SSM Parameters
     outputs:
-      ECS_CLUSTER_NAME: ${{ steps.ssm.outputs.ECS_CLUSTER_NAME }}
-      ECS_SERVICE_NAME: ${{ steps.ssm.outputs.ECS_SERVICE_NAME }}
-      ECS_TASK_DEFINITION_NAME: "${{ steps.ssm.outputs.ECS_TASK_DEFINITION_NAME }}"
-      ECS_CONTAINER_NAME: ${{ steps.ssm.outputs.ECS_CONTAINER_NAME }}
+      ECS_CLUSTER_NAME: ${{ steps.ecs.outputs.ECS_CLUSTER_NAME }}
+      ECS_SERVICE_NAME: ${{ steps.ecs.outputs.ECS_SERVICE_NAME }}
+      ECS_TASK_DEFINITION_NAME: "${{ steps.ecs.outputs.ECS_TASK_DEFINITION_NAME }}"
+      ECS_CONTAINER_NAME: ${{ steps.ecs.outputs.ECS_CONTAINER_NAME }}
     steps:
-      - name: Set SSM Parameter Names
-        id: ssm
+      - name: Set ECS Params
+        id: ecs
         env:
           APP_NAME: ${{ needs.setup.outputs.APP_NAME }}
           ENV: ${{ needs.setup.outputs.ENV }}
@@ -158,29 +158,35 @@ jobs:
           echo APP_NAME=$APP_NAME
           echo ENV=$ENV
           echo SERVICE_NAME=$SERVICE_NAME
-
+          
           ##### Dynamically set the SSM Parameter Names #####
-#          ECR_REPO_NAME="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-repo-name"
-#          ECR_IMAGE_TAG="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-image-tag"
-
-          ECS_CLUSTER_NAME="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-cluster-name"
-          ECS_SERVICE_NAME="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-service-name"
-          ECS_TASK_DEFINITION_NAME="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-task-definition-name"
-          ECS_CONTAINER_NAME="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-container-name"
-
-          ##### Save SSM Parameter Name as Github Outputs #####
-          ##### ecs.yaml script read/writes image tag to this SSM Parameter.
-          # echo "ECR_IMAGE_TAG=$ECR_IMAGE_TAG" | tee -a "$GITHUB_OUTPUT"
+          ECR_REPO_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-repo-name"
+          ECR_IMAGE_TAG_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-image-tag"
+          
+          ECS_CLUSTER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-cluster-name"
+          ECS_SERVICE_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-service-name"
+          ECS_TASK_DEFINITION_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-task-definition-name"
+          ECS_CONTAINER_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecs-container-name"
+          
+          ##### Save ECS Parameters Github Outputs #####
+          ##### ecs.yaml workflow reads from this
+          echo "ECR_REPO_NAME_PARAM=$ECR_REPO_NAME_PARAM" | tee -a "$GITHUB_OUTPUT"
+          echo "ECR_IMAGE_TAG=$ECR_IMAGE_TAG" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_CLUSTER_NAME_PARAM=$ECS_CLUSTER_NAME_PARAM" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_SERVICE_NAME_PARAM=$ECS_SERVICE_NAME_PARAM" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_TASK_DEFINITION_NAME_PARAM=$ECS_TASK_DEFINITION_NAME_PARAM" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_CONTAINER_NAME_PARAM=$ECS_CONTAINER_NAME_PARAM" | tee -a "$GITHUB_OUTPUT"
 
           ##### Get SSM Parameters #####
-          # ECR_REPO_NAME=$(aws ssm get-parameter --name ${ECR_REPO_NAME} --output json | jq -r ".Parameter.Value")
-          ECS_CLUSTER_NAME=$(aws ssm get-parameter --name ${ECS_CLUSTER_NAME} --output json | jq -r ".Parameter.Value")
-          ECS_SERVICE_NAME=$(aws ssm get-parameter --name ${ECS_SERVICE_NAME} --output json | jq -r ".Parameter.Value")
-          ECS_TASK_DEFINITION_NAME=$(aws ssm get-parameter --name ${ECS_TASK_DEFINITION_NAME} --output json | jq -r ".Parameter.Value")
-          ECS_CONTAINER_NAME=$(aws ssm get-parameter --name ${ECS_CONTAINER_NAME} --output json | jq -r ".Parameter.Value")
+          ECR_REPO_NAME=$(aws ssm get-parameter --name ${ECR_REPO_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+          ECS_CLUSTER_NAME=$(aws ssm get-parameter --name ${ECS_CLUSTER_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+          ECS_SERVICE_NAME=$(aws ssm get-parameter --name ${ECS_SERVICE_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+          ECS_TASK_DEFINITION_NAME=$(aws ssm get-parameter --name ${ECS_TASK_DEFINITION_NAME_PARAM} --output json | jq -r ".Parameter.Value")
+          ECS_CONTAINER_NAME=$(aws ssm get-parameter --name ${ECS_CONTAINER_NAME_PARAM} --output json | jq -r ".Parameter.Value")
 
           ##### Save SSM Parameter Values as Github Outputs #####
-          # echo "ECR_REPO_NAME=$ECR_REPO_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "ECR_REPO_NAME=$ECR_REPO_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "ECS_IMAGE_TAG=$ECS_IMAGE_TAG" | tee -a "$GITHUB_OUTPUT"
           echo "ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME" | tee -a "$GITHUB_OUTPUT"
           echo "ECS_SERVICE_NAME=$ECS_SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
           echo "ECS_TASK_DEFINITION_NAME=$ECS_TASK_DEFINITION_NAME" | tee -a "$GITHUB_OUTPUT"
