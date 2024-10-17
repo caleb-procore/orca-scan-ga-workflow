@@ -74,36 +74,48 @@ jobs:
         run: |
           case "$GITHUB_REF" in
           "refs/heads/main")
-            ENV="prod"
-            # todo: construct here instead of hard code above
-            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
-            APP_NAME=${{ env.APP_NAME_PROD }}
-            SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
-            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_PROD }}
-            ;;
+          ENV="prod"
+          # todo: construct here instead of hard code above
+          OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_PROD }}
+          APP_NAME=${{ env.APP_NAME_PROD }}
+          SERVICE_NAME=${{ env.SERVICE_NAME_PROD }}
+          AWS_ACCT_ID=${{ env.AWS_ACCT_ID_PROD }}
+          ;;
           "refs/heads/staging")
-            ENV="stg"
-            # todo: construct here instead of hard code above
-            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
-            APP_NAME=${{ env.APP_NAME_STG }}
-            SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
-            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_STG }}
-            ;; 
+          ENV="stg"
+          # todo: construct here instead of hard code above
+          OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_STG }}
+          APP_NAME=${{ env.APP_NAME_STG }}
+          SERVICE_NAME=${{ env.SERVICE_NAME_STG }}
+          AWS_ACCT_ID=${{ env.AWS_ACCT_ID_STG }}
+          ;; 
           *)
-            ENV="dev"
-            # todo: construct here instead of hard code above
-            OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
-            APP_NAME=${{ env.APP_NAME_DEV }}
-            SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
-            AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
-            ;;
+          ENV="dev"
+          # todo: construct here instead of hard code above
+          OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
+          APP_NAME=${{ env.APP_NAME_DEV }}
+          SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
+          AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
+          ;;
           esac 
-
-          echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
-          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
-          echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
-          echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
-          echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
+        
+        echo "ENV=$ENV"
+        echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN"
+        echo "APP_NAME=$APP_NAME"
+        echo "SERVICE_NAME=$SERVICE_NAME"
+        echo "AWS_ACCT_ID=$AWS_ACCT_ID"
+        
+        # echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
+        # echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
+        # echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
+        # echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
+        # echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
+        
+        echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
+        echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
+        echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
+        echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
+        echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> "$GITHUB_OUTPUT"
     
     outputs:
       ENV: ${{ steps.set_environment.outputs.ENV }}
