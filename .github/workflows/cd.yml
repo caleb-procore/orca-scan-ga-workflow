@@ -101,26 +101,11 @@ jobs:
             echo "DEBUG: dev or other branch"
           
             ENV="dev"
-            echo "DEBUG: ENV=$ENV"
-            echo "DEBUG: dev: ENV=$ENV" >> "$GITHUB_OUTPUT"
-          
             # todo: construct here instead of hard code above
             OIDC_ROLE_ARN=${{ env.OIDC_ROLE_ARN_DEV }}
-            echo "DEBUG: OIDC_ROLE_ARN=$OIDC_ROLE_ARN"
-            echo "DEBUG: dev: OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
-          
             APP_NAME=${{ env.APP_NAME_DEV }}
-            echo "DEBUG: APP_NAME=$APP_NAME"
-            echo "DEBUG: dev: APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
-          
             SERVICE_NAME=${{ env.SERVICE_NAME_DEV }}
-            echo "DEBUG: SERVICE_NAME=$SERVICE_NAME"
-            echo "DEBUG: dev: SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
-          
             AWS_ACCT_ID=${{ env.AWS_ACCT_ID_DEV }}
-            echo "DEBUG: AWS_ACCT_ID=$AWS_ACCT_ID"
-            echo "DEBUG: dev: AWS_ACCT_ID=$AWS_ACCT_ID" >> $GITHUB_OUTPUT
-          
             ;;
           esac
           
@@ -135,12 +120,12 @@ jobs:
           # echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
           # echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
           # echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
-  
-  #          echo "ENV=$ENV" >> $GITHUB_OUTPUT
-  #          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
-  #          echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
-  #          echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
-  #          echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> $GITHUB_OUTPUT
+          
+          echo "ENV=$ENV" >> $GITHUB_OUTPUT
+          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> $GITHUB_OUTPUT
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
+          echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
+          echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> $GITHUB_OUTPUT
   
   
   set-ecr-img-params:
@@ -251,10 +236,13 @@ jobs:
           echo "ACTION_TYPE=$ACTION_TYPE" | tee -a "$GITHUB_OUTPUT"
 
       - name: Debug - Print Variables Before Triggering Workflow
+        id: debug_before_triggering_build_image_scan_workflow
         run: |
           echo "DEBUG: action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}"
+          echo "DEBUG: oidc-role-arn: ${{ needs.set-ecr-img-params.outputs.OIDC_ROLE_ARN }}"
           echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
           echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.oidc_role_arn }}"
+          echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
           echo "DEBUG: aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}"
           echo "DEBUG: dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}"
           echo "DEBUG: app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}"
