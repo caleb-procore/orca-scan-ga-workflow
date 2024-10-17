@@ -140,8 +140,10 @@ jobs:
   set-ecs-params:
     needs: [ setup ]
     runs-on: ubuntu-latest
-    name: Set ECR, ECS & SSM Parameters
+    name: Set ECS & SSM Parameters
     outputs:
+      ECR_REPO_NAME: ${{ steps.ecs.outputs.ECR_REPO_NAME }}
+      ECR_IMAGE_TAG: ${{ steps.ecs.outputs.ECR_IMAGE_TAG }}
       ECS_CLUSTER_NAME: ${{ steps.ecs.outputs.ECS_CLUSTER_NAME }}
       ECS_SERVICE_NAME: ${{ steps.ecs.outputs.ECS_SERVICE_NAME }}
       ECS_TASK_DEFINITION_NAME: "${{ steps.ecs.outputs.ECS_TASK_DEFINITION_NAME }}"
@@ -159,7 +161,6 @@ jobs:
           echo ENV=$ENV
           echo SERVICE_NAME=$SERVICE_NAME
           
-          ##### Dynamically set the SSM Parameter Names #####
           ECR_REPO_NAME_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-repo-name"
           ECR_IMAGE_TAG_PARAM="/${APP_NAME}/${ENV}/${SERVICE_NAME}/ecr-image-tag"
           
