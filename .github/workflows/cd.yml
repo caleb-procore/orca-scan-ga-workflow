@@ -237,6 +237,7 @@ jobs:
         run: |
           echo "DEBUG: action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}"
           echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
+          echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.oidc_role_arn }}"
           echo "DEBUG: aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}"
           echo "DEBUG: dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}"
           echo "DEBUG: app-directory: ${{ needs.setup.outputs.APP_DIRECTORY }}"
