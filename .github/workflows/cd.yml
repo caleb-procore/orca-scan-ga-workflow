@@ -96,11 +96,11 @@ jobs:
             ;;
           esac 
 
-          echo "ENV=$ENV" >> "$GITHUB_OUTPUT"
-          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" >> "$GITHUB_OUTPUT"
-          echo "APP_NAME=$APP_NAME" >> "$GITHUB_OUTPUT"
-          echo "SERVICE_NAME=$SERVICE_NAME" >> "$GITHUB_OUTPUT"
-          echo "AWS_ACCT_ID=$AWS_ACCT_ID" >> "$GITHUB_OUTPUT"
+          echo "ENV=$ENV" | tee -a "$GITHUB_OUTPUT"
+          echo "OIDC_ROLE_ARN=$OIDC_ROLE_ARN" | tee -a "$GITHUB_OUTPUT"
+          echo "APP_NAME=$APP_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "SERVICE_NAME=$SERVICE_NAME" | tee -a "$GITHUB_OUTPUT"
+          echo "AWS_ACCT_ID=$AWS_ACCT_ID" | tee -a "$GITHUB_OUTPUT"
     
     outputs:
       ENV: ${{ steps.set_environment.outputs.ENV }}
