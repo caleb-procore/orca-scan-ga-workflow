@@ -111,7 +111,7 @@ jobs:
   set-ecr-img-params:
     needs: [ setup ]
     runs-on: ubuntu-latest
-    name: Set ECR Parameters
+    name: Set ECR Params
     #    outputs:
     #      ECR_REPO_NAME: ${{ steps.ssm.outputs.ECR_REPO_NAME }}
     #      ECR_IMAGE_TAG_PARAM: "${{ steps.ssm.outputs.ECR_IMAGE_TAG_PARAM }}"
