@@ -41,6 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Do nothing
+        id: noop
         run: echo "No operation performed"
       
       #  build-scan:

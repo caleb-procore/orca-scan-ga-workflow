@@ -251,7 +251,7 @@ jobs:
   invoke-build-image-scan:
     name: Build Image Scan
     needs: [ setup, build-image-scan-prep ]
-    uses: .github/workflows/build-image-scan.yml
+    uses: ./.github/workflows/build-image-scan.yml
     with:
       env: ${{ needs.setup.outputs.ENV }}
       action-type: ${{ needs.build-image-scan-prep.outputs.ACTION_TYPE }}
