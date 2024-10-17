@@ -65,7 +65,7 @@ jobs:
         run: echo "No operation performed"
   
   setup:
-    name: Setup Environment
+    name: Set Env Params
     runs-on: ubuntu-latest
     steps:
       - name: Set deployment environment based on Git branch
