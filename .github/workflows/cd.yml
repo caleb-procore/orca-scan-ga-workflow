@@ -221,7 +221,7 @@ jobs:
   #   merge: build image and scan on actual merge 
   #   New Step - Call build-image-scan.yml based on Action Type
   build-image-scan:
-    needs: [ set-ecr-img-params ]
+    needs: [ setup, set-ecr-img-params ]
     name: Build Image Scan
     runs-on: ubuntu-latest
     steps:
@@ -239,9 +239,6 @@ jobs:
         id: debug_before_triggering_build_image_scan_workflow
         run: |
           echo "DEBUG: action-type: ${{ steps.determine_action_type.outputs.ACTION_TYPE }}"
-          echo "DEBUG: oidc-role-arn: ${{ needs.set-ecr-img-params.outputs.OIDC_ROLE_ARN }}"
-          echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
-          echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.oidc_role_arn }}"
           echo "DEBUG: oidc-role-arn: ${{ needs.setup.outputs.OIDC_ROLE_ARN }}"
           echo "DEBUG: aws-account-id: ${{ needs.setup.outputs.AWS_ACCT_ID }}"
           echo "DEBUG: dockerfile-path: ${{ needs.getparams.outputs.DOCKERFILE_PATH }}"
