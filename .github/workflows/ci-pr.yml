@@ -1,0 +1,45 @@
+name: Build, Lint, & Test
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches: [ "main", "staging", "develop" ]
+
+concurrency:
+  # New commit on branch cancels running workflows of the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: "Build, Lint and Test"
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: orca-scan-ga-workflow:ci-pr
+      ORCA_PROJECT_KEY: "procore-io-platform"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: build Docker image
+        run: |
+          docker build -t $IMAGE_NAME .
+
+      - name: Run orca shift left security scan on container
+        uses: orcasecurity/shiftleft-container-image-action@v1
+        id: orcasecurity_container_image_scan
+        with:
+          api_token: ${{ secrets.ORCA_API_TOKEN }}
+          project_key: ${{ env.ORCA_PROJECT_KEY }}
+          image: ${{ env.IMAGE_NAME }}
+          output:
+            "results/"
+
+      - name: Results
+        run: |
+          if [ -f "results/image.json" ]; then
+            echo "Summary file exists:"
+            cat results/image.json
+          else
+            echo "Summary file does not exist"
+          fi

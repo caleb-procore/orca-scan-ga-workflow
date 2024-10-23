@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("gademo")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+15cca4f0a2e3000f715f38c23ca125d82df9ceb5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+37bbdda384ff34f0d5efbf50a0fe3f902b973256")]
 [assembly: System.Reflection.AssemblyProductAttribute("gademo")]
 [assembly: System.Reflection.AssemblyTitleAttribute("gademo")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
