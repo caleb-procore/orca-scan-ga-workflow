@@ -28,8 +28,9 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker Image
+        working-directory: src/gademo
         run: |
-          docker build -t $IMAGE_NAME src/gademo/Dockerfile 
+          docker build -t $IMAGE_NAME . 
 
       - name: Run orca shift left security scan on container
         uses: orcasecurity/shiftleft-container-image-action@v1
