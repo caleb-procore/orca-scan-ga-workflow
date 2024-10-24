@@ -45,15 +45,19 @@ jobs:
 
       - name: Results
         run: |
+          ls -l results/
           if [ -f ${{ env.ORCA_OUTPUT_FILE }} ]; then
+            echo "::set-output name=upload::true" 
             echo "Orca scan output file exists:"
             cat ${{ env.ORCA_OUTPUT_FILE }} 
           else
+            echo "::set-output name=upload::false"
             echo "Orca scan output file does not exist"
           fi
 
       - name: Upload Orca Scan Results to Github
-        if: always()
+        # if: always()
+        if: steps.orca-security-docker-image-scan.outputs.upload == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: orca-scan-results
