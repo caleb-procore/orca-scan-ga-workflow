@@ -30,9 +30,12 @@ jobs:
       - name: Build Docker Image
         working-directory: src/gademo
         run: |
+          pwd
+          ls -l || true
           docker build -t $IMAGE_NAME . 
 
-      - name: Run orca shift left security scan on container
+      # https://github.com/orcasecurity/shiftleft-container-image-action
+      - name: Run orca shift left security scan on image 
         uses: orcasecurity/shiftleft-container-image-action@v1
         id: orca-security-docker-image-scan
         with:
