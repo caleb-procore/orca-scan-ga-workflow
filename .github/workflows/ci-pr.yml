@@ -45,6 +45,7 @@ jobs:
 
       - name: Results
         run: |
+          ls -l results/ || true
           if [ -f ${{ env.ORCA_OUTPUT_FILE }} ]; then
             echo "::set-output name=upload::true" 
             echo "Orca scan output file exists:"
