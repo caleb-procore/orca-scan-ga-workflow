@@ -1,4 +1,5 @@
-name: Build, Lint, & Test
+# docker build and image scan
+name: Pull Request CI
 
 on:
   pull_request:
@@ -11,35 +12,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: "Build, Lint and Test"
+  orca_image_scan:
+    name: Orca Image Scan
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: orca-scan-ga-workflow:ci-pr
       ORCA_PROJECT_KEY: "procore-io-platform"
+      ORCA_OUTPUT_FILE: "results/orca_scan_report.json"
+
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: build Docker image
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker Image
         run: |
           docker build -t $IMAGE_NAME .
 
       - name: Run orca shift left security scan on container
         uses: orcasecurity/shiftleft-container-image-action@v1
-        id: orcasecurity_container_image_scan
+        id: orca-security-docker-image-scan
         with:
           api_token: ${{ secrets.ORCA_API_TOKEN }}
           project_key: ${{ env.ORCA_PROJECT_KEY }}
           image: ${{ env.IMAGE_NAME }}
-          output:
-            "results/"
+          fail_on_severity: high
+          output_format: json
+          output_file: ${{ env.ORCA_OUTPUT_FILE }}
 
       - name: Results
         run: |
-          if [ -f "results/image.json" ]; then
-            echo "Summary file exists:"
-            cat results/image.json
+          if [ -f ${{ env.ORCA_OUTPUT_FILE }} ]; then
+            echo "Orca scan output file exists:"
+            cat ${{ env.ORCA_OUTPUT_FILE }} 
           else
-            echo "Summary file does not exist"
+            echo "Orca scan output file does not exist"
           fi
+
+      - name: Upload Orca Scan Results to Github
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: orca-scan-results
+          path: ${{ env.ORCA_OUTPUT_FILE }}
