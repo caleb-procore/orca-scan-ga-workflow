@@ -18,7 +18,7 @@ jobs:
     env:
       IMAGE_NAME: orca-scan-ga-workflow:ci-pr
       ORCA_PROJECT_KEY: "procore-io-platform"
-      ORCA_OUTPUT_FILE: "results/orca_scan_report.json"
+      ORCA_OUTPUT_FILE: "results/polaris-csm-orca-scan-report.json"
 
     steps:
       - name: Checkout Code
